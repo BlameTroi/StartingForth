@@ -1,0 +1,296 @@
+Glossary from _Starting Forth_
+
+Building a glossary for future reference from _Starting Forth_.
+Chapter 1
+
+: xxx  yyy ; ( -- ) create new word definition
+
+CR         ( -- ) print a carriage return
+
+SPACE      ( -- ) print a blank space
+
+SPACES     ( n -- ) print n spaces
+
+EMIT       ( c -- ) print an ascii character, eg 42 = *
+
+." ..."   ( -- ) print the string ..., space after ." required
+
++         ( n1 n2 -- sum )  addition
+
+.         ( n -- ) print tne top of stack   
+
+Chapter 2
+
+-         ( n1 n2 -- diff ) subtraction
+
+*         ( n1 n2 -- product ) mulitplication
+
+/         ( n1 n2 -- quotient )  division
+
+/MOD      ( u1 u2 -- u-remainder u-quotient )  division
+
+MOD       ( u1 u2 -- u-remainder )    modulus
+
+SWAP      ( n1 n2 -- n2 n1 )  reverse top two items on stack
+
+DUP       ( n -- n n )  create a copy of the top of the stack
+
+OVER      ( n1 n2 -- n1 n2 n1 )  create a copy of the second item
+
+ROT       ( n1 n2 n3 -- n2 n3 n1 )  rotate third item to top
+
+DROP      ( n -- )  discard top of stack
+
+2SWAP     ( d1 d2 -- d2 d1 ) as above but for cell pairs
+
+2DUP      ( d -- d d ) ..
+
+2OVER     ( d1 d2 -- d1 d2 d1 ) ..
+
+2DROP     ( d -- ) ..
+
+Chapter 3
+
+FORGET XXX ( -- )        Clear dictionary from most recent definition
+                         of xxx.
+
+Chapter 4
+
+IF ...    ( f -- )
+ELSE ...
+THEN ...
+
+=         ( n1 n2 -- f )
+
+-         ( n1 n2 -- diff )
+
+<         ( n1 n2 -- f )          n1 < n2
+
+>         ( n1 n2 -- f )
+
+0=        ( n -- f )              not =0, think of it
+                                  as if there is a space
+0<        ( n -- f )              between 0 and the
+                                  operator
+0>        ( n -- f )
+
+NOT       ( f -- f )              synonym 0=, not bitwise
+
+AND       ( n1 n2 -- and )        bitwise    
+
+OR        ( n1 n2 -- or )
+
+?DUP      ( n -- n n ) or
+          ( 0 -- 0 )
+
+ABORT"    ( f -- )                system depended
+
+?STACK    ( -- f )                stack underflow?
+
+Chapter 5
+
+1+        ( n -- n+1 )            these are obvious
+                                  and are available
+1-                                as optimized assembly
+                                  routines
+2+
+
+2-
+
+2*                                also used for arithmetic
+                                  left and right shifts
+2/
+
+ABS       ( n -- |n| )
+
+NEGATE    ( n -- -n )
+
+MIN       ( n1 n2 -- n-min )
+
+MAX       ( n1 n2 -- n-max )
+
+>R        ( n -- )                to return stack
+
+R>        ( -- n )                to parameter stack
+
+I         ( -- n )                do loop index 
+                                  in 79, copy top return to param
+
+I'        ( -- n )                no longer in standard
+                                  in 79, copy second return to param
+
+J         ( -- n )                next outer loop index
+                                  in 79, copy third return to param
+
+*/        ( n1 n2 n3 -- result )  n1 * n2 into dword, then / n3
+
+*/MOD     ( u1 u2 u3 -- u-rem u-res ) has to be unsigned
+
+Chapter 6
+
+DO        ( limit index -- )     Pairs with loop and +loop
+
+LOOP      ( -- )                 Add 1 to index.
+
++LOOP     ( n -- )               Add n to index, may be signed.
+
+LEAVE     ( -- )                 Terminate loop at next loop/+loop.
+
+BEGIN     ( -- )                 Top of an until or while/repeat.
+
+UNTIL     ( f -- )               Back to begin until f is true.
+
+WHILE     ( f -- )               Run from begin to while, f should
+                                 be available. Run from while to
+                                 repeat if f is true.
+
+REPEAT    ( -- )                 End of begin/while, loop back to begin.
+
+U.R       ( u width -- )         Print an unsigned number right justified.
+
+PAGE      ( -- )                 Clear screen and home cursor.
+
+QUIT      ( -- )                 Terminate current task and return
+                                 to the terminal without printing OK.
+                                 In pforth it does print stack if trace
+                                 is on.
+
+Chapter 7.
+
+D+        ( d1 d2 -- dsum )
+
+D-        ( d1 d2 -- ddiff )
+
+DNEGATE   ( d -- -d )
+
+DABS      ( d -- |d| )
+
+\ not DMAX      ( d1 d2 -- dmax ) \ not in pforth
+
+\ not DMIN      ( d1 d2 -- dmin ) \ not in pforth
+
+D=        ( d1 d2 -- f )
+
+\ not D0=       ( d -- f ) \ not in pforth
+
+D<        ( d1 d2 -- f )
+
+\ not DU<       ( ud1 ud2 -- f )  \ not in pforth
+
+D.R       ( d width -- )
+
+\ not M+        ( d n -- dsum )        These need to be checked against
+                                 the standard, there are changes.
+\ not M/        ( d n -- nquotient )   Note single result.
+
+M*        ( n1 n2 -- dproduct )  Yes, two singles get a double.
+
+\ not M*/       ( d n1 n2 -- dresult )
+
+U.        ( u -- )               These are unsigned singles. As
+                                 with the M words, not all of these
+\ not U*        ( u1 u2 -- udproduct ) are standard.
+
+\ not U/MOD     ( ud u1 -- uremainder uquotient )
+
+U<        ( u1 u2 -- f )
+
+\ not DO /LOOP  ( ulimit uindex -- )   DO +LOOP except all unsigned
+          ( u -- )
+
+HEX       ( -- )
+
+OCTAL     ( -- )
+
+DECIMAL   ( -- )
+
+<#        ( ud -- )              Begin output conversion. UNSIGNED.
+
+#         ........               Converts one digit of output. Always
+                                 produces a digit, even if it's 0.
+
+#S        ........               Convert the remaining digits of the
+                                 output. Always produces at least one
+                                 digit (0).
+
+c HOLD    ........               Insert ASCII character c into the
+                                 output. Hold adjusts output position.
+
+SIGN      ........               Inserts a minus sign in the output
+                                 string if the third cell on the stack
+                                 is negative. A conditional "'-' HOLD").
+
+#>        ( -- addr # )          Complets the output conversion and
+                                 configures the stack for TYPE.
+
+So the net stack effects of an output series would be:
+
+<# ... #>   ( ud -- addr # )  or
+            ( u 0 -- addr # )
+
+<# ... SIGN #>  ( s |d| -- addr # )     here s is the high order cell
+                ( n |n| 0 -- addr # )   of d.
+
+Chapter 8.
+
+CONSTANT XXX    ( n -- )           Creates a constant named xxx.
+         XXX    ( -- n )           
+
+VARIABLE YYY    ( -- )             Creates a variable named yyy.
+         YYY    ( -- addr )
+
+CREATE   ZZZ    ( -- )             Creates an incomplete dictionary
+         ZZZ    ( -- addr )        entry zzz (head and code pointer
+                                   only).
+
+!               ( n addr -- )      Store tos into cell at addr.
+
+@               ( addr -- n )      Place contents of cell at addr on stack.
+
+?               ( addr -- )        Print cell contents. (@ .).
+
++!              ( n addr -- )      Increment cell at adder by n.
+
+ALLOT           ( n -- )           Allocate n bytes of space. Alignment
+                                   is preserved. This is typically in
+                                   the parameter field of the most recently
+                                   started word definition.
+
+                                   This is additional space. So
+                                   varaible fred 8 allot takes up
+                                   two cells, or 16 bytes.
+
+,               ( n -- )           Compiles n into the next available
+                                   cell in dictionary.
+
+C!              ( b addr -- )      Store for byte.
+
+C@              ( addr -- b )      Fetch for byte.
+
+FILL            ( addr n b -- )    Fill n bytes with b.
+
+2CONSTANT XXX   ( d -- )           Creates a double width constant
+          XXX   ( -- d )           named xxx.
+
+2VARIABLE YYY   ( -- )             Creates a double width variable
+          YYY   ( -- addr )        named yyy.
+
+2!              ( d addr -- )      Store double width tos into cells at
+                                   addr.
+                              
+2@              ( addr -- d )      Place contents of cells at addr on
+                                   stack.
+
+C,              ( b -- )           As , but for a byte.
+
+DUMP            ( addr u -- )      Displays u bytes of memory starting
+                                   from addr.
+
+ERASE           ( addr n -- )      Maybe faster addr n 0 FILL.
+
+0               ( -- 0 )           Not available often.
+
+1               ( -- 1 )           Not available often.
+
+0.              ( -- 0 0 )         Not available often.
+
