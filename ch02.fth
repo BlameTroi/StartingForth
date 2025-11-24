@@ -247,7 +247,7 @@ marker ch02            \ forget
 : homicide 20 + ;
 : arson 10 + ;
 : bookmaking 2 + ;
-: tax-evasion 1 + ;
+: tax-evasion 5 + ;
 
 \ Prelude:
 : convicted-of ( -- years , )

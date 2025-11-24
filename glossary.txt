@@ -294,3 +294,34 @@ ERASE           ( addr n -- )      Maybe faster addr n 0 FILL.
 
 0.              ( -- 0 0 )         Not available often.
 
+Chapter 9.  (Descriptions updated for ANS, VOCABULARY and non ANS
+             items ignored).
+
+' xxx           ( -- xt )       Address of execution token (xt) of
+                                the next word in the input stream.
+
+[']             ( -- xt )       ' in compilation mode.
+
+INTERPRET       ( -- )          Interprets the input stream until
+                                exhausted, indexed by >IN.
+
+EXECUTE         ( xt -- )       Execute the word.
+
+EXIT            ( -- )          When compiled in a colon definition,
+                                terminates execution of the word at
+                                that point. Like 'return' or 'exit' in
+                                other languages. Is compile only in ANS.
+
+QUIT            ( -- )          Clears both stacks and returns to
+                                the terminal with no OK message.
+
+HERE            ( -- addr )     Next available dictionary location.
+
+PAD             ( -- addr )     Start of scratch area for character
+                                strings and intermediate processing.
+
+BASE            ( -- n )        Radix.
+
+>IN                             Current position in input stream.
+
+
