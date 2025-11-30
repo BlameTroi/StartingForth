@@ -324,4 +324,59 @@ BASE            ( -- n )        Radix.
 
 >IN                             Current position in input stream.
 
+Chapter 10. Input and output.
+
+I've dropped the obvious block i/o words from the glossary.
+
+TYPE             ( addr u -- ) Send bytes to the current output device.
+
+-TRAILING        ( addr u1 -- addr u2 ) Remove trailing blanks from the
+                                        count.
+
+MOVE             ( addr1 addr2 u -- ) Copy from addr1 to addr2, but the
+                                      semantics are that addr2 for u is
+									  an exact copy of addr1 u before
+									  the move. This is a cell by cell
+									  move. From low to high memory. 
+
+CMOVE            ( addr1 addr2 u -- ) Character by character, this is
+                                      part of the string word set. From
+									  low to high memory.
+>CMOVE is now CMOVE>
+
+CMOVE>           ( addr1 addr2 u -- ) As CMOVE but from high to low
+									  memory.
+
+KEY              ( -- c )             Returns the ascii value of the
+                                      next character from the input
+									  device, a keyboard.
+
+EXPECT           ( addr u -- )        Wait for u characters or a CR
+									  from the keyboard and store them
+									  at addr.
+
+WORD             ( c -- addr )        Read one word from input delimited
+                                      by c. The word is moved to HERE
+									  with a leading length byte.
+
+TEXT             ( c -- )             Reads a astring from the input
+                                      delimited by c, blanks the PAD,
+									  and moves the stirng to PAD.
+
+>BINARY or       (d1 addr1 -- d2 addr2 )  Converts the text at addr1+1
+CONVERT                                   to a binary value with regard
+										  BASE. The new value is accumulated
+										  into d1, being left in d2. Addr2
+										  is the address of the first non-
+										  convertable byte.
+
+NUMBER           ( addr -- n or d )    As above but returns a single if
+									   no valid punctuation is encountered,
+									   or a double if any is.
+
+COUNT            ( addr -- addr+1 u )  Convert a counted string into one
+                                       suitable for TYPE.
+
+BLANK            ( addr n -- )         Fills with blanks.
+
 
