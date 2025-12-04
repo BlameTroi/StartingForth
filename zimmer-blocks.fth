@@ -49,9 +49,9 @@
 variable blk                            \ current block number
 variable scr                            \ current screen number
 
-only forth also definitions
+\ only forth also definitions
 
-INTERNAL                                \ internal definitions
+\ INTERNAL                                \ internal definitions
 
 variable cur_buffer#                    \ current buffer # of current block
          cur_buffer# off
@@ -199,7 +199,7 @@ variable rec#fil          buflen     allot      \ hcb for each block
 : set-blockfile ( fileid -- )
         to blockhandle ;
 
-warning off
+\ warning off
 
 : evaluate      ( a1 n1 -- )
         blk off evaluate ;
