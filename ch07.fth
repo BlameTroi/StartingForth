@@ -298,7 +298,7 @@ marker ch07
 \ 6. Write a word which prints the numbers 0 through 16 in
 \ decimal, hexadecimal, and binary form in three justified
 \ columns.
-
+: binary decimal 2 base ! ;
 : tabler
     cr
     17 0 do
@@ -329,4 +329,8 @@ marker ch07
     then
     #> type space ;
 
+
+\ testing
+
+cr 4500 0 sec cr
 \ End of ch07.fth

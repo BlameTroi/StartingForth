@@ -1,3 +1,13 @@
+# Forth block files are suffixed -blocks.fb and are considered
+# transient.
+*blocks.fb
+
+# Don't leak my includes into other repositories.
 Txb*.fth
+
+# Scratch while figuring out where to put stuff.
 prefix.fth
 problems.fth
+
+# Tool artifacts.
+*.sublime-workspace

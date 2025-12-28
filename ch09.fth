@@ -1,10 +1,11 @@
 \ ch09.fth -- Under the Hood -- T.Brumley
 
-    marker ch09
+   marker ch09
+   require TxbWords.fth
 
-\ Chapter 9 examines the compilation and execution of Forth. Some
-\ of the details are likley different between FIG and ANS Forth
-\ but the concepts carry forward.
+\ Chapter 9 examines the compilation and execution of Forth.
+\ Some of the details are likley different between FIG and ANS
+\ Forth but the concepts carry forward.
 \
 \ These features are known as reflection or introspection in
 \ modern langauges.
@@ -78,21 +79,22 @@
 \
 \ Body
 \     addr some word        *interpreter pointer I is
-\     addr some word        *<-currend word in definition
+\     addr some word        *<-current word in definition
 \     addr some word
 \     addr EXIT              <- normal end of word def
 \
 \ Code pointers are to routines to execute, retrieve contents,
 \ and update contents.
 
-\ * I think there's a bad overload of "interpreter" here. Yes, it's
-\   a threaded interpreter (in vintage Forth) but here we are just
-\   using function vectors. This is different from interpretting
-\   input text, which can do a compilation but doesn't necessarily
-\   do so.
+\ * I think there's a bad overload of "interpreter" here. Yes,
+\   it's a threaded interpreter (in vintage Forth) but here we
+\   are just using function vectors. This is different from
+\   interpretting input text, which can do a compilation but
+\   doesn't necessarily do so.
  
-\ What the text refers to as vectored execution I think of as branch
-\ tables. It might not be a an exactly match but close enough.
+\ What the text refers to as vectored execution I think of as
+\ branch tables. It might not be a an exactly match but close
+\ enough.
 
 \ Storage map:
 \ 
@@ -100,7 +102,7 @@
 \ advances via : CONSTANT VARIABLE ALLOT , C, and variations.
 \
 \ PAD is a work area at some fixed distance after HERE. It is
-\ used as a scratch are for output, <# # #> and such.
+\ used as a scratch are for output, < # # # > and such.
 \
 \ In pforth : PAD HERE 128 + ;
 \ In gforth : PAD HERE 176 + ; 
@@ -135,9 +137,9 @@
 \ 
 \ : COUNTS ' ROT ROT 0 DO OVER EXECUTE LOOP SWAP DROP ;
 \
-\ I wasn't expecting that to work in either pforth or gforth, but
-\ it does. So the semantics of ' and execute are unchanged, just
-\ the actual value returned.
+\ I wasn't expecting that to work in either pforth or gforth,
+\ but it does. So the semantics of ' and execute are unchanged,
+\ just the actual value returned.
 \
 \ I clearly need to revisit this. For now I'll annotate the code
 \ and move on. I don't expect to use this during Advent of Code.
@@ -153,17 +155,20 @@
 \ look forward to the next word of the input stream (expecting
 \ it to be a "CRIMEn". It then executes that word some number
 \ of times (the prefix N to COUNTS).
+\
+\ Reminder, this is only in the context of the code from chapter
+\ 2 problem 6.
  
-: counts         \ ? n -- , executes next word n times 
-    '            \ ? n xt   xt of next word of input stream 
-    rot          \ n xt ?
-    rot          \ xt ? n
-    0 do
-        over     \ xt ? xt
-        execute  \ xt ?    expected next word adds to ?
-    loop
-    swap         \ ? xt    nip
-    drop ;       \ ?       running sentence
+: counts        \ ? n -- , executes next word n times 
+   '            \ ? n xt   xt of next word of input stream 
+   rot          \ n xt ?
+   rot          \ xt ? n
+   0 do
+      over      \ xt ? xt
+      execute   \ xt ?    expected next word adds to ?
+   loop
+   swap         \ ? xt    nip
+   drop ;       \ ?       running sentence
 
 \ So obviously ' also advances the input pointer past the word
 \ it looks up.
@@ -187,6 +192,9 @@ HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
 
 \ 3. How far is PAD from the top of the dictionary in my system?
 \ 128 byges. Pad is actually defined as : PAD HERE 128 + ;
+\
+\ The above is for pforth. Gforth has these as user variables so
+\ the definitions are different.
 
 \ 4. These don't appear applicable beyond noting that BASE does
 \ not seem to be stored in its dictionary entry.
@@ -206,7 +214,7 @@ HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
 \ Define a word that takes a valid index into the array and
 \ executes the word referenced by that element. 
  
-variable branch-table 9 cells allot
+create branch-table 10 cells allot
 branch-table 10 cells erase
 
 : output-one ." I'd do anything for love " ;
@@ -217,7 +225,13 @@ branch-table 10 cells erase
 
 : nop ;
 
-: initialize-branch-table ['] nop 10 0 do dup branch-table i cells + ! loop drop ;
+: initialize-branch-table ( -- , set all entries to no-op )
+   ['] nop
+   10 0 do
+      dup branch-table i cells + !
+   loop drop ;
+
+\ Fill in some entries.
 
 initialize-branch-table 
 ' output-one branch-table 0 cells + !
@@ -227,10 +241,16 @@ initialize-branch-table
 ' output-two branch-table 5 cells + !
 
 : do-it ( n -- )
-    dup 0 >= over 10 < and not if ." I won't do that: " . exit then
-    cells branch-table + @ execute ;
+   dup 0 >= over 10 < and 0=
+   if
+      ." I won't do that: " . exit
+   then
+   cells branch-table + @ execute ;
 
-: test-branch-table
-    11 -1 do i dup cr . space do-it loop cr ;
+\ Exercise branch table including bogus entries to perform
+\ the error check.
+
+: test-branch-table ( -- )
+   11 -1 do i dup cr . space do-it loop cr ;
 
 \ End of ch09.fth

@@ -1,69 +1,131 @@
-( ch10.fth -- I/O and You -- T.Brumley )
+\ ch10.fth -- I/O and You -- T.Brumley
 
-   marker ch10
+marker ch10
 
-(
-   Chapter 10 deals with Forth input/output operations in
-   more depth, including disk access. Block buffers for disk
-   access in pforth are not implemented. I believe they can
-   be loaded as an extension word set for gforth. As I'm
-   planning on using pforth I won't worry too much about
-   blocks here.
-
-   Strings and text and key input are intermixed here with
-   blocks. I've read the chapter through and several of the
-   definitions don't exist in pforth. They aren't in gforth
-   without some optional block support.
-
-   I'll do the glossary and work the problems without trying
-   to create block support. Hopefully this won't be too much
-   of a mess.
-
-   Update: I don't like the approach outlined above. The
-   more I look at blocks the more I like them. I guess I'm
-   a sick bastage. I'm going to try to implement the block
-   word set.
-)
-
-\ A variable number generator (16-bit) from Starting Forth.
+\ Chapter 10 deals with Forth input/output operations in more
+\ depth, including disk access. Block buffers for disk access in
+\ pforth are not implemented. I believe they can be loaded as an
+\ extension word set for gforth. As I'm planning on using pforth
+\ I won't worry too much about blocks here.
 \
-\ The RANDOM and CHOOSE in pforth use this algorithm. Copied
-\ here and shadows the pforth implementation.
+\ Strings and text and key input are intermixed here with blocks.
+\ I've read the chapter through and several of the definitions
+\ don't exist in pforth. They aren't in gforth without some
+\ optional block support.
 \
-\ The version from Starting Forth doesn't include the "mask
-\ and". The pforth version uses "65535 and" to clip the
-\ range to 16-bits. "16777215 and" would clip the range to
-\ 24-bits.
+\ I'll do the glossary and work the problems without trying to
+\ create block support. Hopefully this won't be too much of a
+\ mess.
 
-variable random-seed   here rnd !
+\ Deblocked buzzphrase generator v1
 
-65535 constant random-mask   ( 24 bit )
+use ch10-blocks.fb
 
-: random ( -- n )
-   random-seed @
-   31421 *
-   6927 +
-   random-mask and
-   dup   rnd !   ;
+: >block-line ( addr u u u -- )
+   swap block swap 64 * + \ addr u blkaddr
+   dup 64 blank           \ clear the line
+   swap move ;            \ and move
 
-: choose ( u1 -- u2 )
-   random um*  swap  drop   ;
+\ Rather than mess with the block editor I'll build the blocks
+\ manually.
 
-\ Infrastructure.
+232 block 1024 '*' fill update
+233 block 1024 blank    update
+flush
 
-\ Write something to create blockish files -- mapping lines
-\ into 16x64 without newlines. Be able to read this into
-\ memory to access as if it were a real block.
+\  0                   20                  40
+s" INTEGRATED          MANAGEMENT          CRITERIA      " 232 0 >block-line
+s" TOTAL               ORGANIZATION        FLEXIBILITY   " 232 1 >block-line
+s" SYSTEMATIZED        MONITORED           CAPABILITY    " 232 2 >block-line
+s" PARALLEL            RECIPROCAL          MOBILITY      " 232 3 >block-line
+s" FUNCTIONAL          DIGITAL             PROGRAMMING   " 232 4 >block-line
+s" RESPONSIVE          LOGISTICAL          CONCEPTS      " 232 5 >block-line
+s" OPTIMAL             TRANSITIONAL        TIME PHASING  " 232 6 >block-line
+s" SYNCHRONIZED        INCREMENTAL         PROJECTIONS   " 232 7 >block-line
+s" COMPATIBLE          THIRD GENERATION    HARDWARE      " 232 8 >block-line
+s" QUALIFIED           POLICY              THROUGH-PUT   " 232 9 >block-line 
+s" PARTIAL             DECISION            ENGINEERING   " 232 10 >block-line
+
+update flush
+
+\ Select a buzzword. N is the column offset, which is 0 for
+\ the first column (adj), 20 for the second (adj), and 40 for
+\ the third column (noun).
+
+: buzz ( n -- )
+   232 block +            ( first char on line 0 )
+   11 choose 64 *         ( select line 0-10 )
+   +                      ( word on line )
+   20 -trailing type ;    ( readjust length for print )
+
+: 1adj 0 buzz ;
+: 2adj 20 buzz ;
+: noun 40 buzz ;
+
+\ build a buzzphrase
+
+: phrase 1adj space 2adj space noun ;
+
+\ Replace Gartner Group with "AI".
+
+: paragraph
+   cr ." By using " phrase space ." coordinated with "
+   cr phrase space ." it is possible for even the most "
+   cr phrase space ." to function as "
+   cr phrase space ." within the constraints of "
+   cr phrase ." . " ;
+
+paragraph
 
 \ Chapter 10 problems.
 
-\ 1. Enter some text into a block and then define a word
-\ CHANGE that takes two ASCII values and and changes all
-\ the occurrences of the first two the second.
+\ 1. Enter some text into a block and then define a word CHANGE
+\ that takes two ASCII values and and changes all the occurrences
+\ of the first to the second.
 
-\ 2. Define a word called FORTUNE whic will print a preiction
+232 block 233 block 1024 move save-buffers
+
+: change ( blk fr to -- )
+   rot block dup 1024 + swap  ( fr to end-block start-block )
+   do
+      over                    ( from to from )
+      i c@ = if               ( check cur )
+         dup i c!             ( change if needed )
+      then
+   loop                       ( leaving from to on stack )
+   2drop ;
+
+233 'O' 'o' change update
+233 list
+
+\ 2. Define a word called FORTUNE which will print a preiction
 \ at your terminal. The prediction should be chosen from a
 \ block of 16 lines of 64 characters, remove trailing blanks.
+
+234 block 1024 blank update flush
+
+s" When everyone in the world sees beauty, then ugly exists." 234 0 >block-line
+s" What is and what is not create each other." 234 1 >block-line
+s" High and low rest on each other." 234 2 >block-line
+s" First and last follow each other." 234 3 >block-line
+s" What’s the difference between yes and no?" 234 4 >block-line
+s" What’s the difference between beautiful and ugly?" 234 5 >block-line
+s" Heavy is the root of light." 234 6 >block-line
+s" What should be shrunken must first be stretched." 234 7 >block-line
+s" What should be weakened must first be strengthened." 234 8 >block-line
+s" What should be abolished must first be cherished." 234 9 >block-line
+s" What should be deprived must first be enriched." 234 10 >block-line
+s" What has no substance can penetrate what has no opening." 234 11 >block-line
+s" If princes and kings were not exalted they might be overthrown." 234 12 >block-line
+s" Ruling a great country is like cooking a small fish." 234 13 >block-line
+s" In lightness the root is lost. In haste the ruler is lost." 234 14 >block-line
+s" The Way is eternal. Until your last day you are free from peril." 234 15 >block-line
+update flush
+
+\ Select a line from the Taoist sayings block.
+
+: fortune ( -- )
+   16 choose 64 * 234 block + 64 type cr ;
 
 \ 3. Buddha brings you the twelve years of animals.
 \
@@ -72,29 +134,190 @@ variable random-seed   here rnd !
 \ Rat Ox Tiger Rabbit Dragon Snake
 \ Horse Ram Monkey Cock Dog Boar
 \
-\ Define .ANIMAL that expects 0-11 on the stack, and prints
-\ the corresponding animal name.
+\ Define .ANIMAL that expects 0-11 on the stack, and prints the
+\ corresponding animal name.
 \
-\ Define (JUNEESHEE) which takes a year and prints the name
-\ of the animal of the year. 1900 is the year of the Rat,
-\ 1901 is the year of the Ox
+\ I decided to go with a simple case instead of creating a
+\ separate array.
+
+: .animal ( n -- )
+   abs 12 mod          ( make sure it is in range 0-11 )
+   case
+      0 of ." Rat" endof
+      1 of ." Ox" endof
+      2 of ." Tiger" endof
+      3 of ." Rabbit" endof
+      4 of ." Dragon" endof
+      5 of ." Snake" endof
+      6 of ." Horse" endof
+      7 of ." Ram" endof
+      8 of ." Monkey" endof
+      9 of ." Cock" endof
+      10 of ." Dog" endof
+      11 of ." Boar" endof
+      ." Default is impossible"
+   endcase ;
+
+\ Define (JUNEESHEE) which takes a year and prints the name of the
+\ animal of the year. 1900 is the year of the Rat, 1901 is the
+\ year of the Ox
+
+: (juneeshee) ( n -- , given year >= 1900 print animal )
+   1900 - dup
+   0< if
+      ." BAD YEAR, NEED >= 1900" drop
+   else
+      12 mod .animal
+   then ;
+
+\ Define JUNEESHEE which prompts the user for their birth year and
+\ prints the name name of the year's animal. Do this so that the
+\ user does not have to press return.
+
+: juneeshee ( -- , accept year >= 1900 and print animal )
+   ." Please enter your birth year: "
+   pad 16 blank        ( scrub )
+   4 pad c!            ( maximum length )
+   pad 1+ 4 expect     ( read it )
+   pad number d>s      ( seems to always be a double )
+   dup 1900 < if
+      abort" invlid year, must be 1900 or greater."
+   then
+   cr ." You were born in the Year of the "
+   (juneeshee) cr ;
+
+\ 4. Rewrite the definition of LETTER in this chapter so that it
+\ uses names and descriptions that have been entered into a block
+\ instead of character arrays. Define LETTERS so that it prints
+\ one letter for every person in your file.
+
+( As in the text ... rewrite this )
+
+( FORM LOVE LETTER )
+( First -- fix the string vriable declarations )
+
+\ Name is defined in gforth but is not in the standard. It's part
+\ of the compiler/interpreter support so this shadowing shouldn't
+\ matter for these eercises. It's actually listed as an alias of
+\ parse-name if I'm reading this right.
+
+create name 14 allot
+create eyes 12 allot
+create me   14 allot
+
+44 constant ccomma
+1 constant cbreak
+
+\ Gather and parse comma delimited attributes for the form love
+\ letter.
+
+: vitals
+   name 14 blank
+   eyes 12 blank
+   me 12 blank
+   ccomma text pad name 14 move
+   ccomma text pad eyes 12 move
+   cbreak text pad me   14 move ;
+
+\ Assuming that vitals have been entered, generate a rather
+\ insipid love letter.
+
+: letter
+   page
+   ." Dear " name 14 -trailing type ." ,"
+   cr ." I go to heaven whenever I see your deep "
+      eyes 12 -trailing type ."  eyes. Can"
+   cr ." you go to the movies this Friday?"
+   cr 30 spaces ." Love, "
+   cr 30 spaces me 14 -trailing type
+   cr ." PS: Wear something " eyes 12 -trailing type
+   ."  to show off those eyes!" 
+   cr ;
+
+\ 5. Write a virtual array (disk backed 'virtual' storage
+\ accessed via @ and !).
 \
-\ Define JUNEESHEE which prompts the user for their birth
-\ year and prints the name name of the year's animal. Do
-\ this so that the user does not have to press return.
+\ First select an unused block in your range of assigned blocks.
+\ There can be no text on this block; binary data will be stored
+\ in it. Put this block number in a variable. Then define an
+\ access word which accepts a cell subscript from the stack, then
+\ computes the block number corresponding to this subscript,
+\ calls BLOCK and returns the memory address of the subscripted
+\ cell. This access word should also call UPDATE. Test your work
+\ so far.
 
-\ 4. Rewrite the definition of LETTER in this chapter so
-\ that it uses names and descriptions that have been
-\ entered into a block instead of character arrays. Define
-\ LETTERS so that it prints one letter for every person
-\ in your file.
+239 constant my-block-no
+variable my-block
+my-block-no my-block !
 
-\ 5. Write a virutal array (disk backed 'virtual' storage
-\ accessed via @ and !). ... This gets vary into block
-\ I/O so I'm not sure I feel a need to do it.
+: reset-my-block
+   my-block @ block 1024 erase update flush ;
 
+reset-my-block
 
+1024 cell / 1- constant cells-per-block
 
+\ I borrowed the idea of th from somewhere but made it too
+\ specific. After I found out that gforth already has th and
+\ friends I decided to wrap them to limit them to my block.
+\ The built in versions are better but I had already started
+\ down this path. 
+
+: th ( n -- addr )         \ find cell n in my-block
+   my-block @ block        \ block in memory
+   swap th                 \ position for "real" th
+   update ;                \ might be dirtied
+
+: th@ ( n -- addr )        \ fetch nth item in my-block
+   th @ ;
+
+: th! ( n1 n2 -- )         \ store n1 into n2th item in my-block
+   th ! ;
+
+\ Next use the first cell as a count of how many data items are
+\ stored in the array. Define a word PUT which will store a
+\ value into the next available cell of the array. Define a
+\ display routine which will print the stored elements in the
+\ array.
+
+: put ( n -- , store n in the next available slot )
+   0 th@                  \ how many aleady, watch overflow
+   dup cells-per-block >= if
+      abort" block array overflow!"
+   then
+   1+ dup 0 th!           \ increment
+   th! ;                  \ then use index to address and store
+
+\ Note: width hardcoded, no checking for bounds or valid index.
+
+: prt ( n -- )            \ print nth entry 8 chars wide
+   th@ 8 .r ;
+
+\ Now use this virtual array facility to define a word ENTER
+\ which will accept pairs of numbers and store them in the
+\ array. Bug: does not support negative nubers. Bug: does not
+\ allow for extra spaces. "ENTER 1,2" works, but not "  1,2" or
+\ "1, 2", these three are entered as 1 2 0 2 1 0.
+
+: ENTER ( -- , "enter num,num" )
+   0 0                     \ double word for >number
+   ccomma word count       \ ud c-addr u1
+   >number                 \ ud c-addr+ u2
+   2drop drop              \ n
+   put                     \ bug, leading blanks break >number
+   0 0 cbreak word count >number 2drop drop put ;
+
+\ Finally, define TABLE to print the data stored above with
+\ eight numbers per line
+
+: tabler                      \ TABLE is in base for Search
+   0 th@                      \ how many 
+   dup 0> if                  \ guard against empty
+      1+ 1 do                 \ loop is from first live entry
+         i 8 mod 1 = if cr then  \ newline every 8
+         i prt space 
+      loop 
+   then ;
 
 
 \ End of ch10.fth

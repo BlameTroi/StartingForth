@@ -1,13 +1,16 @@
-( Forth <-> Ascii Conversion)              ( © 1985 MacTutor by J. Langowski 
-)
+( Forth <-> Ascii Conversion )
+( © 1985 MacTutor by J. Langowski )
 
 \ Found at https://preserve.mactech.com/articles/mactech/Vol.01/01.10/ForthBlocks/index.html
  
 : tx-blks ;
 
-variable ifile#  -1 ifile# ! 
-variable ofile# -1  ofile# !    
-: ifile ifile# @ ;  : ofile ofile# @ ;
+variable ifile#
+-1 ifile# ! 
+variable ofile#
+-1 ofile# !    
+: ifile ifile# @ ;
+: ofile ofile# @ ;
 
 hex 4D414341 constant "maca decimal
 create ="blks      "blks ,
@@ -32,36 +35,37 @@ create text.buf 100 allot
 5 constant ch.menu
 
 : moverefnum  ( file#\reply -- )
-    @vrefnum  swap >fcb +fcb.vrefnum w! ;
+   @vrefnum  swap >fcb +fcb.vrefnum w! ;
 
 : get.input.name 
-      >r >r >r
-      100 100 xy>point  0   r>  r>  r@
-      (get.file) page r> @good 
-      0= if abort then  ;
+   >r >r >r
+   100 100 xy>point  0
+   r>  r>  r@
+   (get.file) page r> @good 
+   0= if abort then  ;
 
 : get.save.name
-      page >r >r >r  
-      100 100 xy>point  r>  r>  r@
-      (put.file) r> @good 
-      0= if abort then ;
+   page >r >r >r  
+   100 100 xy>point  r>  r>  r@
+   (put.file) r> @good 
+   0= if abort then ;
 
 : text.open  
-    next.fcb ifile# ! 
-    page ." Text file to convert:"
-    ="textdata 2 ireply get.input.name
-    iname ifile assign 
-    ifile ireply moverefnum
-    ifile open   ?file.error
-    ifile rewind ?file.error ;
+   next.fcb ifile# ! 
+   page ." Text file to convert:"
+   ="textdata 2 ireply get.input.name
+   iname ifile assign 
+   ifile ireply moverefnum
+   ifile open   ?file.error
+   ifile rewind ?file.error ;
 
 : block.open
-    next.fcb ifile# ! 
-    page ." Blocks file to convert:"
-    ="blks 1 ireply get.input.name
-    iname ifile assign 
-    ifile ireply moverefnum
-    ifile open  ?file.error  ifile select ;
+   next.fcb ifile# ! 
+   page ." Blocks file to convert:"
+   ="blks 1 ireply get.input.name
+   iname ifile assign 
+   ifile ireply moverefnum
+   ifile open  ?file.error  ifile select ;
 
 : block.create 
    next.fcb ofile# !
@@ -93,17 +97,17 @@ create text.buf 100 allot
   64 * swap block + ;
 
 : write.line 
-    >line.start 64 -trailing
-    over over + 13 swap c!  ( add CR )
-    1+  ofile write.text  ;
+   >line.start 64 -trailing
+   over over + 13 swap c!  ( add CR )
+   1+  ofile write.text  ;
 
 : write.screen
-    dup 16 0 do dup i ( screen\line )
-    over over . 2 spaces . cr ( debug )
-    write.line  loop drop ( n ) ;
+   dup 16 0 do dup i ( screen\line )
+   over over . 2 spaces . cr ( debug )
+   write.line  loop drop ( n ) ;
 
 : copy.block  ifile get.eof b/buf /
-    0 do  i . cr i write.screen
+   0 do  i . cr i write.screen
       do.events drop loop ;
 
 : read.line  ifile current.position
@@ -115,13 +119,13 @@ create text.buf 100 allot
 : copy.line 
   read.line  ?eof not
   if cur.line# @ dup .
-     64 * screen# @ dup . cr 
-     block +  text.buf 1+  swap
-     text.buf c@ 1- cmove  
-     1 cur.line# +!  cur.line# @ 10 >
-     if 0 cur.line# !   update flush
+    64 * screen# @ dup . cr 
+    block +  text.buf 1+  swap
+    text.buf c@ 1- cmove  
+    1 cur.line# +!  cur.line# @ 10 >
+    if 0 cur.line# !   update flush
         1 screen# +!  1 ofile append.blocks
-     then  do.events drop true
+    then  do.events drop true
   else update flush false then ;
 
 : copy.text  begin copy.line not until ;
@@ -131,15 +135,15 @@ create text.buf 100 allot
 : >block text.open block.create copy.text ;
 
 : change.menu
-    0 " Change" ch.menu new.menu
-    " Forth->Ascii;Ascii->Forth;"  
-    ch.menu append.items draw.menu.bar
-    ch.menu menu.selection:
-    1 activate.event scale -1 xor events !
-    0 hilite.menu
-     case  1 of  >text      endof
+   0 " Change" ch.menu new.menu
+   " Forth->Ascii;Ascii->Forth;"  
+   ch.menu append.items draw.menu.bar
+   ch.menu menu.selection:
+   1 activate.event scale -1 xor events !
+   0 hilite.menu
+    case  1 of  >text      endof
            2 OF  >block     endof endcase
-    events on do.events abort ;
+   events on do.events abort ;
 
 change.menu
 

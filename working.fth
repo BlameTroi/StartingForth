@@ -26,7 +26,7 @@
    block buffer is the one more recently accessed by BLOCK,
    BUFFER, LOAD, LIST, or THRU.
 
-   Blocks are stored in the data space (dictionary).
+   Blocks are stored in the data space aka dictionary.
 
    Block buffer addresses are transient.
 )
@@ -60,19 +60,24 @@
 )
 
 \ Some words from Win32Forth that I like:
+\ TODO: Move these to TxbWords.
 
 : cells- ( a1 n1 -- a1-n1*cell ) \ multiply n1 by the cell size and subtract
    cell * - ;
+
 : cell+  ( a1 -- a1+cell )       \ add a cell to a1
    cell + ;
+
 : cell-  ( a1 -- a1-cell )       \ subtract a cell from a1
    cell - ;
+
 : +cells ( n1 a1 -- n1*cell+a1 ) \ multiply n1 by the cell size and add
    swap cell * + ;
+
 : -cells ( n1 a1 -- a1-n1*cell ) \ multiply n1 by the cell size and
    swap cell * - ;
 
-\ From an olg Google Groups post:
+\ From an old Google Groups post:
 \ 
 \ SCAN and SKIP are useful words for character searching
 \ within a string, and generally useful for parsing strings
@@ -130,6 +135,16 @@
       drop
    then ; 
 
+: LSCAN ( adr len long -- adr' len' )
+\ Scan for char through addr for len, returning addr' and len' of char.
+        >R 2DUP CELLS R> -ROT   \ adr len long adr len
+        OVER + SWAP       \ adr len long adr+len adr
+        ?DO DUP I @ =
+                IF LEAVE
+                ELSE >R 1- >R CELL+ R> R>
+                THEN CELL
+       +LOOP DROP ;
+
 \ : SKIP  ( adr len char -- adr' len' ) \ skip leading chars "char" in string
 \ : SCAN  ( adr len char -- adr' len' ) \ search first occurence of char "char" in string
 \ : WSKIP ( adr len word -- adr' len' ) \ skip leading words "word" in string
@@ -147,7 +162,7 @@
 1024 constant b/buf
   64 constant c/l                 \ characters per line
    8 constant #buffers            \ buffer pool
-  -1 value    blockhandle         \ current block file handle
+  -1 value blockhandle         \ current block file handle
 
 \ BLK returns the address of a cell containing zero or the
 \ number of the block being interpretted. 
@@ -171,6 +186,7 @@ cur_buffer# off
 variable rec_array b/buf #buffers * allot  \ array of blocks
 variable rec#s     buflen           allot  \ block # array
 variable rec#updt  buflen           allot  \ update flags
+variable rec#use   buflen           allot  \ block bubbleup stack
 variable rec#fil   buflen           allot  \ hcb for each block
 
 : buf#>bufaddr ( n -- addr )
@@ -178,16 +194,19 @@ variable rec#fil   buflen           allot  \ hcb for each block
 
 \ Yes, these shadow the variables.
  
-: >rec#s (n -- addr )  \ return buffer n's record addr
+: >rec#s ( n -- addr )  \ return buffer n's record addr
    rec#s +cells ;
 
-: rec#updt ( n -- addr ) \ return buffer n's update addr
+: >rec#updt ( n -- addr ) \ return buffer n's update addr
    rec#updt +cells ;
+
+: >rec#fil ( n -- addr ) \ return buffer n's file addr
+   rec#fil +cells ;
 
 \ note this doesn't consume its input
 
 : chkfil ( n -- n f ) \ is buffer n current?
-   dup dup 8 =
+   dup dup 8 =        \ magic number?
    if
       drop false exit
    else
@@ -248,253 +267,138 @@ variable rec#fil   buflen           allot  \ hcb for each block
 \ n1 = block# a2 = bufaddr
 \ Save all updated buffers to disk.
 
-: save-buffers  ( -- )          \ save all updated buffers to disk
-        #buffers 0                              \ through all the buffers
-        do      rec#use @ >r                    \ find a buffer
-                r@ bubbleup                     \ bump to highest priority
-                r@ cur_buffer# !                \ set current buffer var
-                r@ >rec#updt dup @              \ check update flag
-                if      off                     \ clear update flag
-                        r@ dup >rec#s @         \ get block #
-                        write_block             \ write it
-                else    drop                    \ discard, already cleared
-                then    r>drop
-        loop    ;
+\ SAVE-BUFFERS persists each updated block buffer and
+\ marks those buffers as not updated.
 
-: buffer        ( n1 -- a1 )            \ Assign least used buffer to rec n1
-        dup ?gotrec                     \ check if already present
-        if      >r drop                 \ buffer already assigned, save it
-        else
-                rec#use @ >r                 \ assign LRU buffer
-                r@ >rec#updt dup @           \ check update flag
-                if      off                  \ clear update flag
-                        r@ dup >rec#s @      \ get block #
-                        write_block          \ write it
-                else    drop                 \ discard, already cleared
-                then
-                r@ >rec#s   !        \ set block #
-                blockhandle r@ >rec#fil !    \ set the file hcb
-        then
-        r@ bubbleup                     \ bump to highest priority
-        r@ cur_buffer# !                \ set current buffer var
-        r> buf#>bufaddr ;               \ calc buffer addr
-
-: empty-buffers ( -- )                 \ clean out the virtual buffers
-        rec_array b/buf #buffers * erase
-        rec#s    buflen -1 fill
-        rec#updt buflen erase
-        rec#fil  buflen erase
-        rec#use  #buffers 0
-        do      i over ! cell+     \ initialize the bubbleup stack
-        loop
-        drop ;
-
-: flush         ( -- )                 \ Write any updated buffers to disk
-        save-buffers
-        empty-buffers ;
-
-: update        ( -- )                 \ mark the current block as updated
-        cur_buffer# @ >rec#updt on ;
-
-                                       \ n1 = block # to get
-                                       \ a1 is address of block # n1
-: block         ( n1 -- a1 )           \ Get block n1 into memory
-        dup ?gotrec
-        if      nip dup >r buf#>bufaddr
-                r@ cur_buffer# ! r> bubbleup
-        else    blockhandle 0< abort" No file open"
-                dup buffer dup rot read_block
-        then    ;
-
-: list          ( n1 -- )       \ display block n1 on the console
-        dup scr !
-        block b/buf bounds
-        do      cr i c/l type
-        c/l +loop    ;
-
-: wipe          ( n1 -- )       \ erase the specified block to blanks
-        buffer b/buf blank update ;
-
-: set-blockfile ( fileid -- )
-        to blockhandle ;
-
-\ warning off
-
-: evaluate      ( a1 n1 -- )
-        blk off evaluate ;
-
-: save-input    ( -- xxx 8 )
-        save-input
-        blk @ swap 1+ ;
-
-: restore-input ( xxx 8 -- f1 )
-        swap blk ! 1-
-        restore-input >r
-        blk @ 0>
-        if      blk @ block b/buf (source) 2! \ force back to block
-        then    r> ;
-
-: refill        ( -- f1 )
-        blk @ 0=
-        if      refill
-        else    >in off
-                ?loading on
-                blk @ 1+ b/buf block (source) 2!
-                true
-        then    ;
-
-: \     ( -- )
-        blk @ 0=
-        if      postpone \
-        else    >in @ c/l / 1+ c/l * >in !
-        then    ; immediate
-
-warning on
-
-: blkmessage    ( n1 -- )
-        blk @ 0>
-        if      base @ >r
-                cr ." Error: " pocket count type space
-                dup -2 =
-                if      drop msg @ count type
-                else    ." Error # " .
-                then
-                cr ." Block: " blk @ .
-                ." at Line: " >in @ c/l / .
-                cr blk @ block >in @ c/l / c/l * + c/l type
-                blk off   \ reset BLK cause noone else does!!!
-                r> base !
-        else    _message
-        then    ;
-
-' blkmessage is message
-
-: load          { loadblk \ incntr outcntr -- }
-        save-input dup 1+ dup to incntr
-                              to outcntr
-        begin  >r -1 +to incntr  incntr  0= until
-        loadblk blk !
-        >in off
-        ?loading on
-        blk @ block b/buf (source) 2!
-        interpret
-        begin  r> -1 +to outcntr outcntr 0= until
-        restore-input drop ;
-
-: thru          ( n1 n2 -- )
-        1+ swap
-        ?do     i load
-        loop    ;
-
-: close-blockfile ( -- )
-        blockhandle -1 <>
-        if      flush
-                blockhandle      \ Roderick Mcban - February 11th, 2002
-                close-file drop
-        then    -1 to blockhandle ;
-
-: open-blockfile ( -<filename>- )
-        close-blockfile
-        /parse-word count r/w open-file abort" Failed to open Block File"
-        set-blockfile
-        empty-buffers ;
-
-: create-blockfile ( u1 -<filename>- )  \ create a blank file of u1 block long
-        close-blockfile
-        /parse-word count r/w create-file
-        abort" Failed to create Block File"
-        set-blockfile
-        dup b/buf m* blockhandle resize-file
-        abort" Unable to create a file of that size"
-        empty-buffers
-        0
-        do      i wipe
-        loop
-        flush ;
-
-: #blocks       ( -- n1 )       \ return the number of block in the current file
-        blockhandle file-size drop b/buf um/mod nip ;
-
-\ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-\ initialization of the block system
-\ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-empty-buffers           \ Initialize the virtual memory arrays interpretively
-
-INTERNAL        \ another internal definitions
-
-: virtual-init  ( --- ) \ and during the system startup initialization
-        -1 to blockhandle
-        empty-buffers ;
-
-initialization-chain chain-add virtual-init
-
-MODULE          \ end of the module
-
-environment definitions
-
-: BLOCK         TRUE ;
-
-: BLOCK-EXT     TRUE ;
-
-only forth also definitions
-
-
-\ BLOCK returns the address of the first character of the block
-\ buffer assigned to u.
-
-\ : BLOCK ( u -- a-addr )
-   \ true abort" not implemented!" ;
+: SAVE-BUFFERS ( -- )           \ save all updated buffers to disk
+   #buffers 0                   \ through all the buffers
+   do rec#use @ >r              \ find a buffer
+      r@ bubbleup               \ bump to highest priority
+      r@ cur_buffer# !          \ set current buffer var
+      r@ >rec#updt dup @        \ check update flag
+      if
+         off                    \ clear update flag
+         r@ dup >rec#s @        \ get block #
+         write_block            \ write it
+      else
+         drop                   \ discard, already cleared
+      then
+      r>drop
+   loop ;
 
 \ BUFFER returns the address of the first character of
 \ the block buffer assigned to u.
 
-\ : BUFFER ( u -- a-addr )
-\    true abort" not implemented!" ;
-
-\ EVALUATE extends the base EVALUATE to include storing
-\ 0 in BLK.
-
-\ : EVALUATE ( ? -- ? )
-\    true abort" not implemented!" ;
-   
-\ FLUSH invoke SAVE-BUFFERS and then unassign all block
-\ buffers.
-
-\ : FLUSH ( -- )
-\    save-buffers       \ persist each updated buffer
-\    true abort" not complete!" ; \ unassign all buffers
-
-\ LOAD saves the current input source and then redirects
-\ it to a block, process, and then restore. This may not
-\ be needed for my exercises.
-
-\ : LOAD ( i * x u -- j * x )
-\    true abort" not complete!" ;
-
-\ SAVE-BUFFERS persists each updated block buffer and
-\ marks those buffers as not updated.
-
-\ : SAVE-BUFFERS ( -- )
-\    true abort" not implemented!" ;
-
-\ UPDATE makes the current block buffer as modified. It does
-\ not trigger an I/O.
-
-\ : UPDATE ( -- )
-\    true abort" not implemented!" ;
+: BUFFER ( n1 -- a1 )         \ Assign least used buffer to rec n1
+   dup ?gotrec                \ check if already present
+   if
+      >r drop                 \ buffer already assigned, save it
+   else
+      rec#use @ >r            \ assign LRU buffer
+      r@ >rec#updt dup @      \ check update flag
+      if
+         off                  \ clear update flag
+         r@ dup >rec#s @      \ get block #
+         write_block          \ write it
+      else
+         drop                 \ discard, already cleared
+      then
+      r@ >rec#s   !           \ set block #
+      blockhandle r@ >rec#fil !    \ set the file hcb
+   then
+   r@ bubbleup                \ bump to highest priority
+   r@ cur_buffer# !           \ set current buffer var
+   r> buf#>bufaddr ;          \ calc buffer addr
 
 \ EMPTY-BUFFERS unassigns all block buffers discarding any
 \ pending updates.
 
-\ : EMPTY-BUFFERS ( -- )
-\    true abort" not implemented!" ;
+: EMPTY-BUFFERS ( -- )                 \ clean out the virtual buffers
+   rec_array b/buf #buffers * erase
+   rec#s    buflen -1 fill
+   rec#updt buflen erase
+   rec#fil  buflen erase
+   rec#use  #buffers 0
+   do
+      i over ! cell+     \ initialize the bubbleup stack
+   loop
+   drop ;
+
+\ FLUSH invoke SAVE-BUFFERS and then unassign all block
+\ buffers.
+
+: FLUSH ( -- )                 \ Write any updated buffers to disk
+        SAVE-BUFFERS
+        EMPTY-BUFFERS ;
+
+\ UPDATE makes the current block buffer as modified. It does
+\ not trigger an I/O.
+
+: UPDATE ( -- )                 \ mark the current block as updated
+        cur_buffer# @ >rec#updt on ;
+
+                                       \ n1 = block # to get
+                                       \ a1 is address of block # n1
+\ BLOCK returns the address of the first character of the block
+\ buffer assigned to u.
+
+: BLOCK ( n1 -- a1 )           \ Get block n1 into memory
+   dup ?gotrec
+   if
+      nip dup >r buf#>bufaddr
+      r@ cur_buffer# ! r> bubbleup
+   else
+      blockhandle 0< abort" No file open"
+      dup buffer dup rot read_block
+   then    ;
 
 \ LIST displays block u in an implementation defined format.
 \ Stores u in SCR.
+\ 
+: LIST ( n1 -- )       \ display block n1 on the console
+   dup SCR !
+   BLOCK b/buf bounds
+   do
+      cr i c/l type
+   c/l +loop    ;
 
-\ : LIST ( u -- )
-\    true abort" not implemented!" ;
+: wipe ( n1 -- )       \ erase the specified block to blanks
+   BUFFER b/buf blank update ;
+
+: set-blockfile ( fileid -- )
+   to blockhandle ;
+
+\ warning off
+
+\ EVALUATE extends the base EVALUATE to include storing
+\ 0 in BLK.
+
+: EVALUATE ( a1 n1 -- )
+   blk off evaluate ;
+
+: save-input ( -- xxx 8 )
+   save-input
+   blk @ swap 1+ ;
+
+\ Is (source) source?
+\ SOURCE simplifies the process of directly accessing the
+\ input buffer by hiding the differences between its location
+\ for different input sources. This also gives implementors
+\ more flexibility in their implementation of buffering
+\ mechanisms for different input sources. 
+\
+\ Probably not based on this explanation from std 6.1.2216
+\ ( -- c-addr u )
+\ c-addr is the address of, and u is the number of characters in, the input buffer. 
+ 
+: restore-input ( xxx 8 -- f1 )
+   swap blk ! 1-
+   restore-input >r
+   blk @ 0>
+   if
+      blk @ block b/buf (source) 2! \ force back to block
+   then
+   r> ;
 
 \ REFILL extends the base REFILL to: when the input source is
 \ a block make the next block the input source and current
@@ -502,21 +406,135 @@ only forth also definitions
 \ >IN to zero. Returns true if the new value of BLK is a
 \ valid block, false otherwise.
 
-\ : REFILL ( -- flag )
-\    true abort" not implemented!" ;
+: REFILL ( -- f1 )
+   blk @ 0=
+   if
+      refill
+   else
+      >in off
+      ?loading on
+      BLK @ 1+ b/buf BLOCK (source) 2!
+      true
+   then    ;
+
+\ There is no linefeed in blocks so we need to track length
+\ to find the end of the line.
+\
+\ immediate marks the most recently defined word as an
+\ immediate word (once recognized, doth it)
+
+: \ ( -- )
+BLK @ 0=
+if
+   postpone \
+else
+   >in @ c/l / 1+ c/l * >in !
+then    ; immediate
+
+\ warning on
+
+: blkmessage    ( n1 -- )
+   blk @ 0>
+   if
+      base @ >r
+      cr ." Error: " pocket count type space
+      dup -2 =
+      if
+         drop msg @ count type
+      else
+         ." Error # " .
+      then
+      cr ." Block: " BLK @ .
+      ." at Line: " >in @ c/l / .
+      cr BLK @ BLOCK >in @ c/l / c/l * + c/l type
+      BLK off   \ reset BLK cause noone else does!!!
+      r> base !
+   else
+      _message
+   then    ;
+
+' blkmessage is message
+
+\ LOAD saves the current input source and then redirects
+\ it to a block, process, and then restore. This may not
+\ be needed for my exercises.
+
+: LOAD \ ???   whay curly? { loadblk \ incntr outcntr -- }
+   SAVE-INPUT dup 1+ dup to incntr
+                        to outcntr
+   begin  >r -1 +to incntr  incntr  0= until
+   loadblk BLK !
+   >in off
+   ?loading on
+   BLK @ BLOCK b/buf (source) 2!
+   interpret
+   begin
+      r> -1 +to outcntr
+      outcntr 0=
+   until
+   RESTORE-INPUT drop ;
 
 \ THRU loads blocks u1 through u2, any stack effects are the
 \ result of the words loaded.
+ 
+: THRU ( n1 n2 -- )
+   1+ swap
+   ?do
+      i LOAD
+   loop    ;
 
-\ : THRU ( i * x u1 u2 -- j * x )
-\    true abort" not implemented!" ;
+\ Actual OS file access, will need review.
 
-\ '\' extends the execution semantics of \ so that if BLK is
-\ contains zero, parse and discard the remainder of the parse
-\ area, otherwise parse and discard the portion of the parse
-\ area corresponding to the remainder of the current line.
-\ Blcoks are 16 by 64, so typically the next multiple of 64. 
+: CLOSE-BLOCKFILE ( -- )
+   blockhandle -1 <>
+   if
+      flush
+      blockhandle      \ Roderick Mcban - February 11th, 2002
+      close-file drop
+   then
+   -1 to blockhandle ;
 
-\ I don't think I'll do this if I can avoid it.
+: OPEN-BLOCKFILE ( -<filename>- )
+   CLOSE-BLOCKFILE
+   /parse-word count r/w open-file abort" Failed to open Block File"
+   set-blockfile
+   EMPTY-BUFFERS ;
 
+: CREATE-BLOCKFILE ( u1 -<filename>- )  \ create a blank file of u1 block long
+   CLOSE-BLOCKFILE
+   /parse-word count r/w create-file
+   abort" Failed to create Block File"
+   SET-BLOCKFILE
+   dup b/buf m* blockhandle resize-file
+   abort" Unable to create a file of that size"
+   EMPTY-BUFFERS
+   0
+   do
+      i wipe
+   loop
+   FLUSH ;
+
+: #blocks ( -- n1 )       \ return the number of block in the current file
+   blockhandle file-size drop b/buf um/mod nip ;
+
+\ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\ initialization of the block system
+\ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+empty-buffers           \ Initialize the virtual memory arrays interpretively
+
+\ INTERNAL        \ another internal definitions
+
+: virtual-init  ( --- ) \ and during the system startup initialization
+   -1 to blockhandle
+   empty-buffers ;
+
+\ ******** initialization-chain chain-add virtual-init
+
+\ MODULE          \ end of the module
+\ environment definitions
+\ : BLOCK         TRUE ;
+\ : BLOCK-EXT     TRUE ;
+
+\ only forth also definitions
 \ End of blocks.fth
