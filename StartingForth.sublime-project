@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": "../StartingForth",
+			"folder_exclude_patterns": ["backup", "bin"],
+			"follow_symlinks": true
+		},
+		{
+			"path": "doc",
+			"name": "Documentation"
+		}
+	]
+}
