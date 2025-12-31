@@ -5,14 +5,14 @@ marker ch07
 \ Chapter 7 discusses double precision numbers, unsigned versions
 \ of both single and double precision, and more words to operate
 \ on them.
-\
+
 \ For me this is all stuff I learned in the 1970s working in
 \ assembly language. There are some Forth words to learn in place
 \ of SRA/SRL/... for arithmetic shifts Forth uses 2* and 2/.
-\
-\ The use of BASE is discussed but unless I missed it Brodie didn't
-\ mention that in its own base, a base is always '10'. I think
-\ that's a useful realization for newbies.
+
+\ The use of BASE is discussed but unless I missed it Brodie
+\ didn't mention that in its own base, a base is always '10'. I
+\ think that's a useful realization for newbies.
 \
 \ <any number> base ! base @ . prints 10
 \
@@ -20,23 +20,23 @@ marker ch07
 \ work these days. Both gforth and pforth support the various D
 \ words. Input of double precision using the old convention of
 \ "if it starts with a digit and isn't a known word, discard
-\ punctuation and store the result as a double" doesn't work
-\ anymore. Gforth handles 12.34 while pforth does not complain
-\ but doesn't put anything on the stack. Patterns such as 1:23:45
-\ that worked in old forth error as word not found in both gforth
-\ and pforth.
+\  punctuation and store the result as a double" doesn't work
+\  anymore. Gforth handles 12.34 while pforth does not complain
+\  but doesn't put anything on the stack. Patterns such as
+\  1:23:45 that worked in old forth error as word not found in
+\  both gforth and pforth.
 \
 \ In gforth these are all stored as "1234 0" on the stack: 1.234,
 \ 12.34, 123.4, and 1234.; the decimal point isn't really one.
 
 \ NOTE: According to Forth Programmer's Handbook, the only
-\ required punctuation is a period/decimal point. Various
-\ Forths may have more. This is a minor deviation from the
-\ standard for pforth, but I think I can live with it.
+\ required punctuation is a period/decimal point. Various Forths
+\ may have more.
 
 \ Number formatting using <# # #S and #> is explained. It works
 \ backwards, digits are laid down right to left, which can be
-\ confusing at first. The code is clever. The number to display
+\ confusing at first. But this is the way. n BASE @ /MOD gives
+\ the current digit. The number to display
 \ must be a double and should be unsigned.
 \
 \ An example is printing a time in hours/minutes/seconds format.
@@ -70,11 +70,11 @@ marker ch07
     #>             \ ends conversion
     type space ;   \ display string
 
-\ In 1970s Forth, the word sign checks the sign of the third word
+\ In 1970s Forth, the word SIGN checks the sign of the third word
 \ on the stack and places a '-' in the output buffer if needed.
 \
 \ Modern gforth and pforth check the top of stack, so when using
-\ any old picture formatting, be sure to rot before sign.
+\ any old picture formatting, be sure to ROT before SIGN.
 \
 \ To reinforce that the buffer is laid down right to left:
 \
@@ -101,10 +101,13 @@ marker ch07
 
 \ And some other variations.
 
-\ Next mixed mode operations are discussed, bringing in the
-\ M series of words (M/ M+ M* ...). Not all of these exist in
-\ current standards, but there is a good explanation of why
-\ and how they should be used.
+\ Next mixed mode operations are discussed, bringing in the M
+\ series of words (M/ M+ M* ...). Not all of these exist in
+\ current standards, but there is a good explanation of why and
+\ how they should be used.
+\
+\ These are generally not needed anymore unless one is on an
+\ narrow word length system (typically embedded). 
 
 \ The subject of numbers in definitions is examined. The main
 \ point is that the base at word compile time determins the
@@ -116,10 +119,10 @@ marker ch07
 
 \ Chapter 7 problems.
 
-\ 1. Write a word that determines the largest positive number
-\ that a cell may hold. The text suggested a begin until but
-\ I find begin while repeat more natural.
-\
+\ 1. Write a word that determines the largest positive number that
+\ a cell may hold. The text suggested a BEGIN UNTIL but I find
+\ BEGIN WHILE REPEAT more natural.
+
 \ Basically starting from 1 shift left (2*) until the result
 \ is negative. Subtracting one from that (viewed as unsigned)
 \ brings us the largest positive value. Along the way I count
@@ -143,18 +146,27 @@ marker ch07
     1+                    \ we stopped shifting before sign bit
     dup . ."  bits or " 2/ 2/ 2/ . ." bytes " cr ;
 
+
 \ 2. A word problem to explain why we use OR instead of + when
 \ selecting between options. Bit masking.
 
+
 \ 3. Write a BEEP word that sounds the terminal bell (7) three
 \ times. Printing "BEEP" after each bell and pausing long enough
-\ between bells to count the rings. I don't do bells, but it would
-\ be something like the following given what we have seen in the
-\ book. However, even 100000 iterations was not perceptible in
-\ the delay.
-\ The book's delay is 20000 0 do loop ;
+\ between bells to count the rings.
+
+\ I don't do bells, but it would be something like the following
+\ given what we have seen in the book. However, even 100000
+\ iterations was not perceptible in the delay on my Mac.
+\
+\ The book's delay is 20000 0 DO LOOP ;
+\
+\ These days a timer would be used. The standard provides the word
+\ MS to delay for at least some number of milliseconds. This is in
+\ the Facility extensions.
 
 : longish.pause ( -- ) 50000 0 do i drop loop ;
+
 : beep ( -- )
     3 0 do
         7 emit
@@ -162,7 +174,9 @@ marker ch07
         longish.pause
     loop ;
 
+
 \ Problems 4 and 5 are practice in double length math.
+
 
 \ 4. a. Rewrite the termperature conversions from chapter 5
 \ assuming input and results are double-length signed integers
@@ -181,6 +195,7 @@ marker ch07
 \ the .deg formatter.
 
 \ These overrides are for the a couple of problems.
+\ The redefinition warnings can be ignored.
 
 : m+ + ;
 : m*/ */ ;
@@ -199,6 +214,7 @@ marker ch07
 : k>f   ( dk -- df )
    k>c d>s c>f ;
 
+
 \ 4. b. Write a formatted output word named .DEG which will
 \ display a double length signed integer scaled by 10 as a
 \ string of digits, a decimal point, and one fractional
@@ -212,6 +228,7 @@ marker ch07
     #s                 \ 999
     rot sign           \ (-)
     #> type ;
+
 
 \ 4. c. Test the following conversions.
 \
@@ -227,6 +244,7 @@ marker ch07
 \ 
 \ The above conversions work and properly feed the .deg word.
 
+
 \ 5. a. Write a routine to evaluate the quadratic equation:
 \
 \ y = 7x^2 + 20x + 5
@@ -236,7 +254,10 @@ marker ch07
 \ x = -b +/- sqrt(b^2-4ac)
 \     -------------------
 \            2a
- 
+
+\ I wrote both a general solver and specific to this equation
+\ solver with a, b, and c hard coded:
+
 : solver ( a b c x -- d )
     swap       \ a b x c 
     >r         \ a b x     | c
@@ -256,13 +277,15 @@ marker ch07
     5 +                \ 7x^2+20x+5
     ;
 
-\ The text hard codes a b c.
+\ The hard coded version is closes to the text's answer. The way
+\ the problem was worded, this is actually what was requested.
 
-\ here's as the book has it, but my m*/ doesn't
-\ really match the semantics so the 'rot 1' breaks
-\ things.
+\ Here is the text's solution. My M*/ doesn't really match the
+\ semantics of the FIG version so the ROt 1 breaks things.
 \ 
 \ : dpoly dup 7 m* 20 m+ rot 1 m*/ 5 m+ ;
+\
+\ Here's a modified version:
 
 : dpoly
     dup           \ x x
@@ -272,33 +295,36 @@ marker ch07
     5 +           \ 7x^2+20x+5
     ;
 
+\ The hardcoded coefficients make it easy to follow the
+\ calculation. I could probably redo my variable version to
+\ optimize but meh. The key thing to remember here is:
+\
+\ Keep factoring to simplify terms.
+
+
+\ 5. b. How large an x will not overflow a 32-bit signed
+\ integer?
+
 : ?dmax  0 begin 1+ dup dpoly 0 ( d< ) < until 1- . ;
 
 : findmax
     0                    \ starting x
     begin
         1+ dup solver2   \ x y
-        32767 >          \ check for needing 16-bits
+        32767 >          \ check for needing more than 16-bits
     until
     1- . ;
 
-\ ?dmax needs to be adjusted for 8 byte cells
-\
-\ The hardcoded coefficients make it easy to follow the
-\ calculation. I could probably redo my variable version
-\ to optimize but meh. The key thing to remember here is
-\ factoring to get simpler terms and reduce the number
-\ of multiplications by one.
+\ 67 hits 32768, so 66. If we're unsigned, 95 is the max. Very
+\ nice of Brodie to line that up perfectly.
 
-\ 5. b. How large an x will not overflow a 32-bit signed
-\ integer?
-
-\ 67 hits 32768, so 66. If we're unsigned, 95 is the max.
 
 \ 6. Write a word which prints the numbers 0 through 16 in
 \ decimal, hexadecimal, and binary form in three justified
 \ columns.
+
 : binary decimal 2 base ! ;
+
 : tabler
     cr
     17 0 do
@@ -308,15 +334,23 @@ marker ch07
         cr
     loop ;
 
-\ 7. What does it tell you when the you enter .. and don't get
-\ an error? In the era it meant the double precision wordset
-\ had been loaded. It would put 0 0 on the stack.
 
-\ 8. Write a phone number picture output. The book only required
-\ 7 digits with an optional #s for any remaining digits (an area
-\ code or such). I did it a bit differently but decided steal
-\ the technique to check to see if there are any digits left
-\ to print.
+\ 7. What does it tell you when the you enter .. and don't get an
+\ error?
+
+\ In the old days it meant the double precision wordset had been
+\ loaded. It would put 0 0 on the stack.
+
+
+\ 8. Write a phone number picture output.
+
+\ The text only required 7 digits with an optional #s for any
+\ remaining digits (an area code or such). These days phone
+\ numbers are always at least 10 digits.
+\
+\ I did it a bit differently but decided steal and idea from the
+\ text's solution to to see if there are any digits left to
+\ print.
 
 : .ph# ( d -- )
     <# # # # # '-' hold # # #          \ the old 7 digit number
@@ -329,8 +363,7 @@ marker ch07
     then
     #> type space ;
 
+\ Note the visual confusion working from right to left can cause
+\ if you aren't paying attention.
 
-\ testing
-
-cr 4500 0 sec cr
 \ End of ch07.fth

@@ -1,25 +1,37 @@
 \ ch10.fth -- I/O and You -- T.Brumley
 
 marker ch10
+include TxbWords.fth
+
+\ The various TH words get redefined warnings in gforth, these and
+\ others are safe to ignore.
+\
+\ This really uses the Block word set so this won't work in pforth.
+
+\ When loaded some instream tests fire off.
 
 \ Chapter 10 deals with Forth input/output operations in more
 \ depth, including disk access. Block buffers for disk access in
-\ pforth are not implemented. I believe they can be loaded as an
-\ extension word set for gforth. As I'm planning on using pforth
-\ I won't worry too much about blocks here.
-\
+\ are not implemented in pforth. They are available in gforth.
+
+\ When I started this chapter I didn't see myself as ever needing
+\ to use the block editor so I dummied up some loads into
+\ temporary blocks.
+
+\ As I look ahead to _Thinking Forth_ I believe I may want to at
+\ least try to use blocks for source to get a better feel of how
+\ and why things were done back in the day.
+
+
 \ Strings and text and key input are intermixed here with blocks.
 \ I've read the chapter through and several of the definitions
-\ don't exist in pforth. They aren't in gforth without some
-\ optional block support.
-\
-\ I'll do the glossary and work the problems without trying to
-\ create block support. Hopefully this won't be too much of a
-\ mess.
+\ don't exist in pforth. Some are in gforth and I worked some
+\ of the problems there.
 
 \ Deblocked buzzphrase generator v1
 
-use ch10-blocks.fb
+use ch10-blocks.fb       \ no file is needed, this just lets gforth
+                         \ create a scratch file
 
 : >block-line ( addr u u u -- )
    swap block swap 64 * + \ addr u blkaddr
@@ -27,7 +39,9 @@ use ch10-blocks.fb
    swap move ;            \ and move
 
 \ Rather than mess with the block editor I'll build the blocks
-\ manually.
+\ manually. This is still in a block, and gforth has a default
+\ backing file "blocks.fb" but I'm not concerned with its
+\ contents.
 
 232 block 1024 '*' fill update
 233 block 1024 blank    update
@@ -77,11 +91,14 @@ update flush
 
 paragraph
 
+
 \ Chapter 10 problems.
 
 \ 1. Enter some text into a block and then define a word CHANGE
 \ that takes two ASCII values and and changes all the occurrences
 \ of the first to the second.
+
+\ Copy the buzzword table to another block.
 
 232 block 233 block 1024 move save-buffers
 
@@ -98,9 +115,10 @@ paragraph
 233 'O' 'o' change update
 233 list
 
-\ 2. Define a word called FORTUNE which will print a preiction
-\ at your terminal. The prediction should be chosen from a
-\ block of 16 lines of 64 characters, remove trailing blanks.
+
+\ 2. Define a word called FORTUNE which will print a preiction at
+\ your terminal. The prediction should be chosen from a block of
+\ 16 lines of 64 characters, remove trailing blanks.
 
 234 block 1024 blank update flush
 
@@ -126,6 +144,7 @@ update flush
 
 : fortune ( -- )
    16 choose 64 * 234 block + 64 type cr ;
+
 
 \ 3. Buddha brings you the twelve years of animals.
 \
@@ -160,7 +179,7 @@ update flush
 
 \ Define (JUNEESHEE) which takes a year and prints the name of the
 \ animal of the year. 1900 is the year of the Rat, 1901 is the
-\ year of the Ox
+\ year of the Ox, and so on.
 
 : (juneeshee) ( n -- , given year >= 1900 print animal )
    1900 - dup
@@ -186,6 +205,7 @@ update flush
    cr ." You were born in the Year of the "
    (juneeshee) cr ;
 
+
 \ 4. Rewrite the definition of LETTER in this chapter so that it
 \ uses names and descriptions that have been entered into a block
 \ instead of character arrays. Define LETTERS so that it prints
@@ -200,6 +220,11 @@ update flush
 \ of the compiler/interpreter support so this shadowing shouldn't
 \ matter for these eercises. It's actually listed as an alias of
 \ parse-name if I'm reading this right.
+
+\ I ended up not finishing this. I think I have the concepts down
+\ and this is basicaly a repeat of earlier problems. Upcoming
+\ problem 5 covers the new areas in this problem and is more
+\ interesting to me.
 
 create name 14 allot
 create eyes 12 allot
@@ -234,6 +259,7 @@ create me   14 allot
    ."  to show off those eyes!" 
    cr ;
 
+
 \ 5. Write a virtual array (disk backed 'virtual' storage
 \ accessed via @ and !).
 \
@@ -257,7 +283,7 @@ reset-my-block
 
 1024 cell / 1- constant cells-per-block
 
-\ I borrowed the idea of th from somewhere but made it too
+\ I borrowed the idea of th from _Thinking Forth_ but made it too
 \ specific. After I found out that gforth already has th and
 \ friends I decided to wrap them to limit them to my block.
 \ The built in versions are better but I had already started
@@ -298,6 +324,9 @@ reset-my-block
 \ array. Bug: does not support negative nubers. Bug: does not
 \ allow for extra spaces. "ENTER 1,2" works, but not "  1,2" or
 \ "1, 2", these three are entered as 1 2 0 2 1 0.
+\
+\ I see solutions for these bugs but they don't add value to the
+\ problem.
 
 : ENTER ( -- , "enter num,num" )
    0 0                     \ double word for >number

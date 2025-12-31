@@ -7,27 +7,34 @@ marker ch04
 \
 \ Some key points covered in the text:
 \
-\ No GOTO statement.
+\ There is no GOTO statement.
 \
-\ When checking a value, the pattern is v dup test if ..... then 
+\ When checking a value, the pattern is (assuming the value
+\ is on the top of the stack):
+\
+\   DUP test IF ..... ELSE ...... THEN
+\
+\ If that test is for check is for 0, it is possible to skip
+\ the ELSE path if it is a no-op:
+\
+\   ?DUP IF ..... THEN 
 \ 
 \ Truth values were 0 and 1, with the C convention that anything
 \ that is not false is true. Modern Forth uses -1 for true but the
-\ not false is true behavior is still available.
+\ "if it isn't false it must be true" behavior is still available
+\ with caveats.
+\
+\ NOT is a poorly defined word in the Forth standard. It can either
+\ mean INVERT (just flip the bits) or =0 which will return a proper
+\ -1 for true and 0 for false. I think of NOT as =0, but the main
+\ lesson is "don't use NOT".
 \
 \ The usual explanations of boolean operators instead of addition
-\ or subtraction.
-\ 
+\ or subtraction is offered in the text.
 
-\ As of the early 1980s the ounces per dozen eggs table for
-\ sizing was:
-\
-\ Extra Large         27-30
-\ Large               24-27
-\ Medium              21-24
-\ Small               18-21
 
 \ Problems
+
 
 \ 3. bar carding function.
 
@@ -37,6 +44,7 @@ marker ch04
     else ." drink away"
     then ;
 
+
 \ 4. Print number sign.
 
 : sign.test ( nn -- , prints positive, negative, or zero )
@@ -45,10 +53,12 @@ marker ch04
     else ." zero" drop then
     ;
 
-\ 5. Guard our original stars from chapter 1 so that it
-\ will not print anything for zero or negative n.
 
-\ prior definition of stars ... second shadows first.
+\ 5. Guard our original stars from chapter 1 so that it will not
+\ print anything for zero or negative n.
+
+\ Prior definition of stars ... second shadows first.
+\ This sequence will get redefinition warnings. This ok.
 
 : stars ( n -- , print n stars )
     0 do 42 emit loop ; 
@@ -56,11 +66,11 @@ marker ch04
 : stars ( n -- , protect prior stars from 0 )
     dup if abs stars else drop then ;
 
-\ 6. Write within (n low high -- flag , n in [low..high)
+
+\ 6. Write WITHIN (n low high -- flag , n in [low..high)
 \ 
-\ within and within? are already taken, so we'll use
-\ ?range which has the same semantics as within
-\ low <= n < high
+\ WITHIN is now in the ANS standard and some Forths include
+\ WITHIN? which in n in [low..high]. I'll use ?RANGE for this.
 
 : ?range ( n low high -- flag , is n in low <= n < high )
     rot dup rot ( low n n high )
@@ -68,8 +78,9 @@ marker ch04
     -rot        ( flag-h low n )
     <=          ( flag-h flag-n )
     and ;       ( passed? )
+
     
-\ 7. Wirte a guess the number game (yawn).
+\ 7. Write a guess the number game (yawn).
 
 : guess ( n g -- )
     2dup = if
@@ -83,8 +94,9 @@ marker ch04
         then
     then ;
 
-\ 8. Using nested tests with if/else/then write a definition
-\ speller that spells out one through four, prefixing with
+
+\ 8. Using nested tests with IF/ELSE/THEN write a definition
+\ SPELLER that spells out one through four, prefixing with
 \ negative when appropriate.
 
 : speller ( n -- )
@@ -102,10 +114,14 @@ marker ch04
         ." out of range dude" drop
     then ;
 
-\ 9. Trap could be used as part of binary search algorithm,
-\ print between, not between, or match (only possible when
-\ low = high). Use ?range and remember that it is a right
-\ open interval.
+
+\ 9. TRAP could be used as part of binary search algorithm, print
+\ between, not between, or match (only possible when low = high).
+\ Use ?RANGE and remember that it is a right open interval.
+
+\ 3dup is from chapter 2 problems.
+: 3dup        ( a b c -- a b c a b c )
+    dup 2over rot ;
 
 : trap ( n low high -- n until matched )
     3dup 1+ ?range

@@ -1,27 +1,61 @@
 \ ch08.fth -- Variables, Constants, and Arrays -- T.Brumley
 
     marker ch08
+    include TxbWords.fth
 
-\ Chapter 8 finally introduces variables. The stack can only deal
-\ with so many items. And the programmer can typically deal with
-\ even fewer stack items.
+\ There are a lot of redefinitions of gforth words. Colors, the
+\ variations of CELL, and a few others. All can be safely ignored
+\ here.
+
+\ Chapter 8 finally introduces variables. While the stack is of
+\ arbitrary depth, the built in words for stack access cap out at
+\ at around 3 cells. It's easy to get confused and in a thread on
+\ Reddit someone advised me that they never try to deal with more
+\ than the top 3 items on the stack: one for each hand along with
+\ the cell remaining on the top of the stack.
 \
-\ It's all really pointers and the expression of them seems very
-\ natural to me. The assmebly language experience is handy.
+\ If I were a Motie I could probably handle 4 cells: left hand,
+\ right hand, gripping hand, and the remaining cell :)
+\
+\ This is an excellent visualization and rule of thumb. I strive
+\ to only work with the top 3 items in any one word.
+\
+\ Really wanting to juggle more items on the stack is a "code
+\ smell" that means more factoring is needed.
+
+
+\ As for variables, it's all really pointers. Unlike the
+\ abomination of C, the expression of pointers in Forth seems
+\ natural to me. I thank learning assembly as my first
+\ professional language.
+
 
 \ Everything is cell sized (we can access at a byte level, but
 \ it all starts with cells).
+\
+\ NOTE: byte addressing isn't always cleanly available. This
+\ depends on the underlying processor. IIRC, the 68000 series
+\ could only address and work on word boundaries.
+\
+\ Most things provided by the system want to be aligned on cell
+\ width boundaries.
+
 
 \ Brodie provides a rule of thumb for when to use variables:
 \
 \    In Forth, variables are appropriate for any value that
 \    is used inside a definition which may need to change at
 \    any time after the definition has already been compiled.
+\
+\ In other words, "application state." The stack should be viewed
+\ as transient and not be used to persist something across a long
+\ code path.
+
 
 \ Variables
 
 \ A variable name in a definition compiles to placing the address
-\ of the variable's contents on the stack. The two main words
+\ of the variable's contents on the stack. The two main words for
 \ dealing with variables are store and fetch.
 \
 \ !       ( n addr -- , stores n at addr )
@@ -29,6 +63,15 @@
 \ @       ( addr -- n , fetches n from addr )
 \
 \ ?       ( addr -- , fetches and print : ? @ . ; )
+\
+\ This is a good time to remind myself that a piece of "from"
+\ information is to the left of its "destination." For ! this is
+\ easy, as that's how ST works in S/370 assembly.
+\
+\ For MOVE it's the same: from to length.
+\
+\ A good consistency.
+
 
 \ How do variables work behind the scenes?
 \
@@ -42,7 +85,7 @@
 \ An example of how to use a variable as a persistent counter
 \ would be:
 \
-\     variable eggs
+\     VARIABLE eggs
 \     : egg.reset  0 eggs ! ;
 \     : egg        1 eggs +! ;
 \ 
@@ -51,48 +94,74 @@
 \ There is only +!, not a minus bang (makes sense when you think
 \ of stack ordering).
 
+
 \ Constants
 
-\ So seeing how a variable is defined in code, it makes sense that a
-\ constant is defined thusly:
+\ So seeing how a variable is defined in code, it makes sense that
+\ a constant is defined thusly:
 \
 \     value CONSTANT CNAME
 \
 \     CNAME | get code | space holds the value from top of stack
 \
-\ Where a variable places an address on the stack, the constant places
-\ the value on the stack, enforcing constantness.
+\ Where a variable reference places an address on the stack, a
+\ constant reference places the actual value on the stack.
+
+\ ANS Forth also provides VALUE. These are things that change
+\ infrequently. a value reference places the value on the stack,
+\ just as a constant would. The VALUE can be updated using TO.
 \
-\ There is some discussion of optimizing constants when programming
-\ an eprom of defining frequently used numbers as constants.
+\     3 VALUE duh
+\     duh .             -> 3
+\     7 TO duh
+\     duh .             -> 7
+
+
+\ There is some discussion of optimizing constants when
+\ programming an eprom of defining frequently used numbers
+\ as constants.
 \
 \     0 constant 0
 \     1 constant 1
 \
 \ I expect modern Forths for production environments to deal with
-\ optimization. 
-
-\ Double length forms are available via 2VARIABLE 2@ 2! (no 2+? or
-\ 2+!) and 2CONSTANT.
-
-\ To be consistent between pforth and gforth, I'll probably use
-\ phrasing such as this to define double constants.
+\ optimization so I didn't spend much time on it.
 \
-\     160 s>d constant cname
+\ Looking at some gforth generated code, it bakes the binary
+\ values into a definition when using a literal number.
+
+
+\ Double length forms are available via 2VARIABLE 2@ 2! (no 2+?
+\ or 2+!) and 2CONSTANT.
+\
+\ There is a 2VALUE but no 2TO. Testing in gforth shows that 
+\ TO can tell if the target is a 2VALUE and act accordingly.
+
+
+\ To be consistent between pforth and gforth, I'm considering
+\ phrasing such as this to define double constants instead of
+\ 160. or 160 0 to create a double literal.
+\
+\     160 S>D 2CONSTANT CNAME
 \
 \ The same could be accomplished with 160 0 ... but S>D is more
 \ intention revealing.
 
-\ As noted elsewhere, doubles aren't likely to be something I use
-\ often. I just don't see a need for them on a 64-bit system. 
+
+\ As noted elsewhere, doubles aren't likely to be something used
+\ often on modern systems. I just don't see a need for them on a
+\ 64-bit system. 
+
 
 \ Brodie describes on trick that I like. Remember those rational
 \ approximations from a prior chapter? They can be put in a double
 \ constant and applied via */.
 
-355 113 2constant pi
+
+355 113 2CONSTANT PI
 : circle.area ( r -- a ) dup * pi */ ;
- 
+
+
 \ Arrays
 
 \ Unlike in Pascal, Basic, Fortran, etc., the bones of the array
@@ -100,53 +169,77 @@
 \ array is somewhere between Assembly/Forth and Pascal/Basic/Fortran
 \ in visibility.
 
+
 \ Arrays are an extension of variables. When added to the dictionary
 \ a "next possible entry" address is tracked by the compiler. Using
 \ ALLOT bumps this by the requested number of *bytes*. So:
 \
 \     VARIABLE limits 8 ALLOT      \ extends by another cell (badly)
 \
-\ Gives us a two element array.
-
-\ Aside: I know the English meaning of allot and this is just one of
-\ the bits of Forth that predate the use of allocate and alloc. It's
-\ a homophone of "a lot". Insert the "is two a lot ..." meme here.
+\ Gives us a two element array. Better would be:
 \
-\ It bugged me in the 1980s and still bugs me. It's a minor nit, but
-\ I'll kvetch anyway.
-
-\ There's discussion of zero indexing, which is unavoidable at this
-\ level of coding. I'm a one based guy myself but as in assembly or
-\ C, this is not the field to fight that battle on.
+\     VARIABLE limits CELL allot    \ CELL is a platform constant
 \
+\ Later we will learn about CREATE which I find a cleaner way to
+\ declare an array:
+\
+\     CREATE limits 2 CELLS ALLOT   \ net is the same as about
+\
+\ Both VARIABLE and CREATE add an entry to the dictionary, the
+\ difference is that VARIABLE does an implicit CELL ALLOT.
+
+
+\ Aside: I know the English meaning of allot and this is just one
+\ of the bits of Forth that predate the use of allocate and alloc
+\ It's a homophone of "a lot". Insert the "is two a lot ..."
+\ meme here.
+\
+\ It bugged me in the 1980s and still bugs me. It's a minor nit,
+\ but I'll kvetch anyway.
+
+
+\ There's discussion of zero indexing, which is unavoidable at
+\ this level of coding. I'm a one based guy myself but as in
+\ assembly or C, this is not the field to fight that battle on.
+\ Zero is natural at this level.
+
+
 \ Forth provides FILL and ERASE to initialize or clear any block
-\ of storage, but this should surely be restricted to arrays (and
-\ later structures).
+\ of storage. I belive this should only be used for arrays, larger
+\ structures, and dynamically allocated storage. If you botch a
+\ file you could trample a dictionary header.
+\
+\ ERASE is also mentioned as a more efficient 0 FILL. I suspect
+\ this was a machine code optimization. Modern compilers and
+\ processors shouldn't care about this.
+
 
 \ The text is very locked into 16-bit architectures here, and is
-\ comfortable allocating bytes (2 per cell is very easy to track).
-\ I'll go through the egg example but add the use of CELL and CELLS.
+\ comfortable allocating bytes (2 per CELL is very easy to
+\ track). I'll go through the egg example but add the use of CELL
+\ and CELLS.
 \
-\ Looking through the text, the words CELL and CELLS are not mentioned.
+\ Looking through the text, the words CELL and CELLS are not
+\ mentioned. 16-bits were all we needed back in the day. Per the
+\ standard, CELL CELLS and CELL+ were added as portability aids.
+\
+\ CELL+ does not appear immediately useful to me but it's there
+\ for a reason.
 
-\ These are predefined in pforth and gforth.
-: CELL   8 ;      ( -- 8, size of a cell, would be obtained from runtime )
+8 CONSTANT CELL
 : CELLS  CELL * ; ( n -- bytes to hold that many cells )
+: CELL+  CELL + ; ( addr1 -- addr1+CELL )
 
 \ So instead of:
 
-variable somearray 32 8 * allot
+VARIABLE somearray 31 8 * ALLOT      \ allocates 32 item array
 
 \ We would do:
 
-variable otherarray 32 cells allot
-
-\ Since the first cell is index 0, 32 is the highest usuable index.
-\ The array is 33 elements long. I suspect I'll trip over this a
-\ few times.
+CREATE otherarray 32 CELLS ALLOT     \ cleaner
 
 \ And so on, using CELLS for indexing: array[1] = @array + 1 cells,
-\ [0] = @ + 0 cells, and so on. Note there is no range or bounds
+\ [0] = @ + 0 cells, and so on. Note there are no range or bounds
 \ checks.
 \
 \ This is just like and 0 indexed addressing scheme in other
@@ -154,10 +247,15 @@ variable otherarray 32 cells allot
 \ word such as : idx ( addr n -- ) cells * + ; might help, but
 \ I suspect that with practice you would automatically filter
 \ what you see the way some people do with parentheses in lisps.
+\
+\ I have since read that the idiom is more like TH, as in "fifth"
+\ "firsth" and so on. This is something Moore said he defines
+\ almost immediately if it isn't in a system.
+
 
 \ The egg example counts cartons of eggs by egg size, as with
 \ the weights in a prior example.
-
+\
 \ There are four categories of eggs, along with an error and
 \ reject category. Six slots, 0-5.
 
@@ -173,7 +271,7 @@ variable otherarray 32 cells allot
 3 constant egg.large        \ 27 <
 4 constant egg.extra.large  \ 30 <
 5 constant egg.error        \ 30 >=
-variable carton.counts 5 cells allot
+create carton.counts 6 cells allot
 
 \ Given a carton weight, return its egg.<size> category.
 : category ( n -- n )
@@ -223,6 +321,7 @@ reset.counts
 \ This and my own typos gave me some debugging time which is
 \ always a good learning tool.
 
+
 \ Factoring code
 
 \ Brodie launches into a discussion of proper Forthish code
@@ -232,7 +331,9 @@ reset.counts
 \    words. It is not enough to break a problem into small
 \    pieces. The object is to isolate words that can be reused.
 \
-\ Or the modern phrasing is DRY--Don't Repeat Yourself.
+\ Or the modern phrasing is DRY--Don't Repeat Yourself, though
+\ actually you are repeating yourself. It's just one word instead
+\ of a phrase :)
 \
 \ This generates some bogus complaints about optimization from
 \ people--the weight of word chaining exceeding the weight of
@@ -243,6 +344,7 @@ reset.counts
 \ In memory restricted environments the chaining overhead was
 \ considered a good trade for a smaller memory footprint. That
 \ is not as much of a concern in this era.
+
 
 \ A Forth convention is that any word should consume its own
 \ parameters. If parameters need repeating, that should be
@@ -257,25 +359,29 @@ reset.counts
 \
 \ Structure programming would call this loose coupling.
 \
-\ There are best practices that will become clear over time.
+\ There are more best practices that will become clear over time.
+
 
 \ Byte Arrays
 
-\ Just address by byte (or double byte, etc) instead of cells. Useful
-\ if memory is an issue or dealing with character data. I'm not sure what
-\ other string support exists yet.
+\ Just address by byte (or double byte, etc) instead of CELLs.
+\ Useful if memory is an issue or dealing with character data.
+\ There is a STRING wordds extension in the standard but I have
+\ yet to review it.
+
 
 \ Array Initialization
 
-\ CREATE is like VARIABLE but does not allot any storage other than
-\ the dictionary header.
+\ CREATE is like VARIABLE but does not allot any storage other
+\ than the dictionary header.
 \
 \       create limits
 \
 \       limits | code for create | unallocated
 \
-\ , (COMMA) takes a number off the stack and stores it at a cell in the
-\ current location in the dictionary (in this case in limits).
+\ , (COMMA) takes a number off the stack and stores it at a cell
+\ in the current location in the dictionary (in this case in
+\ limits).
 \
 \       220 ,
 \
@@ -283,27 +389,30 @@ reset.counts
 \
 \ For a byte array, use C, (C-COMMA) to store a single byte.
 \ 
-\ So it looks to me as if CONSTANT, VARIABLE, and CREATE place a new
-\ dictionary header down, appropriate code to access the contents,
-\ and adjusts the dictionary pointer to the next free spot. ALLOT,
-\ COMMA and C-COMMA may or may not store information in the entry,
-\ but they always adjust the dictionary pointer.
+\ So it looks to me as if CONSTANT, VARIABLE, and CREATE place a
+\ new dictionary header down, then the appropriate code to access
+\ the contents, and then adjusts the dictionary pointer to the
+\ next free spot. ALLOT, COMMA and C-COMMA may or may not store
+\ information in the entry, but they always adjust the dictionary
+\ pointer.
 
 \ I believe my understanding is correct but my terminology isn't
 \ consistent with either Brodie or modern Forth. I'll learn the
 \ new terminology in time.
+
 
 \ Target compilation / tethered development
 
 \ A VARIABLE is established in RAM while a CONSTANT or CREATE is in
 \ ROM. Like our old literal pools in assembly.
 
+
 \ Chapter 8 problems.
 
 \ 1. a&b. A simple pie bakery where pies can be baked, eaten, or
 \ frozen. Maintain counters. Baking a pie increments the inentory,
 \ eating decrements, and freezing will freeze the enitre inventory.
-\ If no pies are available when attempt to eat a pie, return an
+\ If no pies are available when attempting to eat a pie, return an
 \ error message.
 
 variable pies
@@ -334,11 +443,13 @@ variable eaten
         drop
         ." no pies to freeze "
     then ;
+
  
 \ 2. Write a word .base that prints the current base in decimal.
 
 : .base ( -- )
     base @ dup decimal . base ! ;
+
 
 \ 3. Write a number formatting word M. that prints a double length
 \ word with a floating decimal point controlled by a variable
@@ -365,7 +476,8 @@ variable places
         type space
     then ;
 
-4. \ A colored pencil inventory.
+
+\ 4. A colored pencil inventory.
 
 0 constant plain
 1 constant red
@@ -373,9 +485,9 @@ variable places
 3 constant green
 4 constant orange
 
-variable #pencils 4 cells allot
+create #pencils 5 cells allot
 
-: pencils-reset #pencils 4 cells erase ;
+: pencils-reset #pencils 5 cells erase ;
 
 : pencils ( n -- addr , of color slot )
     dup 0 < if ." error " exit then
@@ -387,6 +499,7 @@ variable #pencils 4 cells allot
     15 blue pencils !
     12 green pencils !
     0 orange pencils ! ;
+
 
 \ 5. Create an array of 10 cells with random values from 0 to
 \ 70. Then print a histogram (horizontally) with one asterisk
@@ -414,11 +527,20 @@ variable dataset 9 cells allot
         loop
     loop
     cr ;
-    
-\ Exploration -- what is the range of random in
-\ pforth? 0->65535 via the code below. So to scale
-\ that to 0-70 we divide by 936. Not worried about
-\ fractionsal numbers for the histogram exercise.
+
+\ Exploration -- what is the range of random in pforth? 0->65535
+\ via the code below. So to scale that to 0-70 we divide by 936.
+\ Not worried about fractionsal numbers for the histogram
+\ exercise.
+\
+\ RANDOM and CHOOSE aren't in the standard so I ported them to 
+\ gforth but the granularity is (currently) 24-bit. I have no
+\ idea why I wrote it that way.
+\
+\ The following does what one should expect, minimum is 0 and
+\ maximum is $FFFFFF. I did some playing with variations of this
+\ to experiment with seeding and to check the distribution of
+\ the randoms. It's good enough for toy programs.
 
 variable minrandom
 variable maxrandom
@@ -426,7 +548,6 @@ variable maxrandom
 : rangefinder ( n -- )
      999999999 minrandom !
     -999999999 maxrandom !
-
     0 do
         random
         dup minrandom @ < if dup minrandom ! then
@@ -436,16 +557,17 @@ variable maxrandom
     cr ." min " minrandom ?
     cr ." max " maxrandom ?
     cr ;
-    
+
+
 \ 6. A tic tac toe UI, enter moves as a number 1-9 and a mark.
 \ Squares are number from upper left to lower right. Use a byte
 \ array with -1 for O and 1 for X.
-\
+
 \ Using -1 as a marker in byte was a trick question. c@ does not
 \ sign extend. 
 
-variable ttboard 1 cells allot     \ 1 character would work
-ttboard 2 cells erase              \ but this is better imo.
+create ttboard 2 cells allot
+ttboard 2 cells erase
 
 \ In writing these I original had nested ifs, many dups, and
 \ such in the X and Y words. It seems better to factor each
@@ -472,13 +594,13 @@ ttboard 2 cells erase              \ but this is better imo.
 
 : x ( n -- )
     1 swap place-or-error ;
-            
+
 : o ( n -- )
     -1 swap place-or-error ;
 
-\ It's been suggest to avoid exit, but I'm having trouble
+\ It's been suggested to avoid EXIT, but I'm having trouble
 \ coming up with a nesting format I find readable. Using
-\ exits as in guardian ifs seems safe.
+\ EXITs in guardian IFs seems safe.
 
 : glyph ( n -- )
     ttboard + c@ dup          \ n -- b b
@@ -496,12 +618,12 @@ ttboard 2 cells erase              \ but this is better imo.
         i 3 < if space '|' emit then
     loop
     drop ;
- 
+
 : print-board
     1 print-row cr
     horizontal.bar cr
     2 print-row cr
     horizontal.bar cr
     3 print-row cr ;
-    
+
 \ End of ch08.fth

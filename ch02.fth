@@ -1,24 +1,25 @@
 \ ch02.fth -- How to get results -- T.Brumley
 
-\ definitions from working through the chapter along with
-\ any solved problems.
+marker ch02
 
-marker ch02            \ forget         
-
-\ Chapter 2 is long explanation of using the stack and the
-\ words commonly used for stack juggling. It's a slog if
-\ one isn't familiar with postfix or Reverse Polish Notation.
+\ Chapter 2 is long explanation of using the stack and the words
+\ commonly used for stack juggling. It's a slog if one isn't
+\ familiar with postfix or Reverse Polish Notation.
 \
-\ Doubles are introduced but the examples are from the
-\ 16-bit era. The words work the same (cell pairs instead
-\ of cell) but the Forth I use doesn't push a number such
-\ as `123.45` onto the stack as a double 12345. gforth does
-\ but I prefer pforth.
+\ Doubles are introduced but the examples are from the 16-bit era.
+\ The words work the same (cell pairs instead of cell). There is
+\ a part of the standard that says certain punctuatin is expected
+\ to create a double. Pforth doesn't do this, but gforth does.
 \
-\ On my Apple Silicon Macbook the top word in a pair is the
-\ most significant.
+\ 1 puts one on the top of the stack
+\ 1. puts one and zero on the top of the stack
 \
-\ 12.34 .s <2> 1234 0 in gforth
+\ The standard says the high half of the word is stored on the top
+\ of the low half.
+\
+\ 12.34 .s <2> 1234 0     NOTE: the "decimal point" isn't really
+\                         anything other than a "this is a double"
+\                         indicator.
  
 \ Calculator-style practice problems
 \ 
@@ -75,16 +76,15 @@ marker ch02            \ forget
 : foot       feet  ;
 : inch             ;
 
-\ so 10 yards 2 feet + 9 inches + should be 393 inches.
+\ So 10 yards 2 feet + 9 inches + should be 393 inches.
 \    1 yard 2 feet + 1 inch +     should be 61
 \    2 yards 1 foot               should be 84
 
-\ Convert infix to postfix, put in definitions, and
-\ add stack effect comments. Brodie allows us to jiggle
-\ the definition to force a convenient stack order but
-\ that's no fun.
+\ Convert infix to postfix, put in definitions, and add stack
+\ effect comments. Brodie allows us to jiggle the definition to
+\ force a convenient stack order but that's no fun.
 
-\ 1.     ab + c      \ or if c b a then * + 
+\ 1.     ab + c
 
 : 2b1    ( a b c -- n )
      rot * + ;
@@ -97,7 +97,7 @@ marker ch02            \ forget
 
 : 2b2             ( a b c -- n )
     rot           ( c b a -- )
-    swap 4 *      ( c a 4b --)
+    swap 4 *      ( c a 4b -- )
     - 6 /  +  ;   ( -- n )
 
 \ 3.      a
@@ -135,18 +135,18 @@ marker ch02            \ forget
     -rot - swap / ;
 
 
-\ Make more use of stack swizzler words.
+\ I need more practice with the stack swizzling words.
 
 
 \ quiz c
 
-\ 1. Write a phrase to flip three items on the
-\ stack. So a b c becomes c b a.
+\ 1. Write a phrase to flip three items on the stack.
+\ FLIP3 ( a b c -- c b a )
 
 : flip3  ( a b c -- c b a )
     rot rot swap ;
 
-\ 2. Write an over that does not use over.
+\ 2. Write an OVER that does not use OVER.
 
 : revo1  ( a b -- a b a )
     swap dup      ( b a a -- )
@@ -155,7 +155,7 @@ marker ch02            \ forget
 : revo2  ( a b -- a b a )
     2dup drop ;   ( -- a b a )
 
-\ 3. Write <rot (these days known as -rot) so that
+\ 3. Write <ROT (these days known as -ROT) so that
 \ a b c becomes c a b.
 
 : <rot   ( a b c -- c a b )
@@ -188,9 +188,11 @@ marker ch02            \ forget
 
 \ Chapter problems
  
-\ 1. Difference dup dup vs 2dup?
+\ 1. What is the difference between DUP DUP and 2DUP?
+
 \    a b dup dup -- a b b b
 \    a b 2dup    -- a b a b
+
 
 \ 2. Write a phrase that reverses the top four items
 \ on the stack.  ( 1 2 3 4 -- 4 3 2 1 )
@@ -198,13 +200,18 @@ marker ch02            \ forget
 : rev4  ( a b c d -- d c b a )
     swap 2swap swap ;
 
-\ 3. Write 3dup ( a b c -- a b c a b c )
+
+\ 3. Write 3DUP ( a b c -- a b c a b c )
 
 : 3dup        ( a b c -- a b c a b c )
     dup 2over rot ;
 
-\ Write expressions for the equations with the
-\ specified stack effects.
+\ Write expressions for the equations with the specified effects.
+
+
+\ NOTE: 2p4 and 2p5 are floating point constants/literals in
+\ gforth so a warning pops when loading these into gforth. As
+\ I'm using floating point I ignore the warnings.
 
 \ 4.  a^2 + ab + c        ( c a b -- result )
 
@@ -215,6 +222,7 @@ marker ch02            \ forget
     dup *        ( c ab a^2 -- )
     + + ;        ( -- result )
 
+
 \ 5.   a - b
 \      -----     ( a b -- result )
 \      a + b
@@ -223,11 +231,11 @@ marker ch02            \ forget
     2dup         ( a b a b -- )
     -            ( a b a-b -- )
     rot rot +    ( a-b a+b -- )
-    / ;          ( -- resulst )
+    / ;          ( -- result )
 
-\ 6. Write a set of words to calculate a prison
-\ sentence.
-\ 
+
+\ 6. Write a set of words to calculate a prison sentence.
+\
 \ Spec:
 \
 \ Prison sentence calculator. Convicted of <crime> gets <years> to
@@ -243,25 +251,30 @@ marker ch02            \ forget
 
 \ We're limited to basic stack and arithmetic here.
 
-\ Crimes:
+\ First, we set the sentences for each crime:
+
 : homicide 20 + ;
 : arson 10 + ;
 : bookmaking 2 + ;
 : tax-evasion 5 + ;
 
-\ Prelude:
-: convicted-of ( -- years , )
+\ Then we have the prelude which prepares the stack for the
+\ list of criems.
+
+: convicted-of ( -- 0 , )
     0 ;
 
-\ Report:
+\ Finally the conclusion which just prints the total sentence.
+
 : will-serve ( years -- , )
     . ." years" ;
+
 
 \ 7. Write egg.cartons that takes a number of eggs and
 \ returns the number of cartons (dozens) and how many
 \ are left over.
 
 : egg.cartons    ( eggs -- left-over filled-cartons )
-    /mod . ;
+    12 /mod swap ;
 
 \ end of ch02.fth

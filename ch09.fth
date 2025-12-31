@@ -1,7 +1,8 @@
 \ ch09.fth -- Under the Hood -- T.Brumley
 
    marker ch09
-   require TxbWords.fth
+   require TxbWords.fth          \ random and a couple of others
+
 
 \ Chapter 9 examines the compilation and execution of Forth.
 \ Some of the details are likley different between FIG and ANS
@@ -10,9 +11,18 @@
 \ These features are known as reflection or introspection in
 \ modern langauges.
 
-\ ' (TICK) returns an execution token in ANS, not a direct
-\ address. EXECUTE will execute the word referenced. Unlike in
-\ FIG, ' word 80 DUMP works while it segfaults. After some
+
+\ I did most of the work for this chapter in pforth. While there
+\ will be some differences in low level details, for my purposes
+\ this is sufficient.
+\
+\ I've since started using gforth since it comes with the BLOCK
+\ word set and I need that for some things, but either seems like
+\ a good Forth to me.
+
+
+\ ' (TICK) returns an execution token in ANS. It may not be a
+\ direct address. EXECUTE will execute the word referenced.
 \ experimentation it looks to me as if the exeuction token (xt)
 \ is an offset and not an absolute address.
 \
@@ -25,8 +35,7 @@
 \
 \ In gforth ' appears to return an address and FIND is compile
 \ only. EXECUTE works.
-\
-\ In pforth one can't do something like 110 ' someconstant !
+
 
 \ There's a lot of power here.
 \
@@ -35,9 +44,14 @@
 \ compile time or execution time only. Interpretation seems to
 \ be part of execution.
 \
+\ We'll learn more about this in chapter 11.
+\
 \ Semantics are more important than the implementation. The
 \ return value from ' is meant to be used by the compiler and
-\ by EXECUTE.
+\ by EXECUTE. If you aren't writing a Forth, you shouldn't care
+\ what an XT "is", only what it "means" to the Forth you are
+\ using.
+
 
 \ The Dictionary and Vocabularies
 \ 
@@ -51,6 +65,7 @@
 \ some of the word definitions are JITed.
 \
 \ Insert my normal rant about DEP here.
+
 
 \ Dictionary entries:
 \
@@ -91,10 +106,12 @@
 \   are just using function vectors. This is different from
 \   interpretting input text, which can do a compilation but
 \   doesn't necessarily do so.
+
  
 \ What the text refers to as vectored execution I think of as
 \ branch tables. It might not be a an exactly match but close
 \ enough.
+
 
 \ Storage map:
 \ 
@@ -113,6 +130,7 @@
 \ There is an input buffer which is offset from the stack. In
 \ ANS this is somehow related to TIB.
 
+
 \ The concept of vocabularies seems to be replaced by by the
 \ ANS Optional Search-Order Word Set. I'm not going to need
 \ vocabularies for Advent of Code, so I just skimmed this.
@@ -122,6 +140,7 @@
 \ provides a benefit according to Brodie. I guess this would
 \ depend on the lookup mechanism during compilation, but that
 \ shouldn't matter over time.
+
 
 \ Chapter 9 Problems
 
@@ -143,6 +162,7 @@
 \
 \ I clearly need to revisit this. For now I'll annotate the code
 \ and move on. I don't expect to use this during Advent of Code.
+
 
 \ Chapter 2 problem 6 is a court sentencing application. A judge
 \ enters "convicted-of crime1 crime2 crime3 will-serve" and is 
@@ -173,8 +193,9 @@
 \ So obviously ' also advances the input pointer past the word
 \ it looks up.
 
+
 \ 2. What is the beginning address of your private dictionary?
-\
+
 \ I don't have a direct way to find this from what I know so far
 \ but HERE returns the next available slot in the dictionary.
 \ It seems to me that in pforth the XT is an offset, so if I
@@ -188,7 +209,11 @@ HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
 \
 \ The Text suggests EMPTY . but in pforth I don't have an EMPTY
 \ and a private dictionary doesn't make sense in a single user
-\ system. 
+\ system.
+\
+\ NOTE: EMPTY does't exist in gforth either. I only see it in
+\ the text on the first block of a multi-block application.
+
 
 \ 3. How far is PAD from the top of the dictionary in my system?
 \ 128 byges. Pad is actually defined as : PAD HERE 128 + ;
@@ -196,8 +221,11 @@ HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
 \ The above is for pforth. Gforth has these as user variables so
 \ the definitions are different.
 
+
 \ 4. These don't appear applicable beyond noting that BASE does
-\ not seem to be stored in its dictionary entry.
+\ not seem to be stored in its dictionary entry. I've since seen
+\ that in gforth this is a USER variable.
+
 
 \ 5. An exercise in vectored execution.
 \

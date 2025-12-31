@@ -11,23 +11,22 @@ marker ch06
 \ Basic and other languages these are FOR loops, but Forth
 \ follows the Fortran and PL/I convention of DO.
 \
-\ The main thing to understand is how the parameter stack is
-\ used for index storage and checking. In
+\ The main thing to understand is how the parameter stack is used
+\ for index storage and checking. In
 \
-\ : do-must-be-in-defintion
-\     10 0 DO 42 emit LOOP cr ; 
+\ : do-must-be-in-defintion 10 0 DO 42 emit LOOP cr ; 
 \
-\ 10 and 0 are moved to the return stack with the same
-\ ordering. 0 is top of stack. The index (top of stack) is
-\ incremented at each LOOP and then compared with the second
-\ value on the return stack.  
-\
+\ 10 and 0 are moved to the return stack with the same ordering.
+\ 0 is top of stack. The index (top of stack) is incremented at
+\ each LOOP and then compared with the second value on the return
+\ stack.  
+
 \ Forth uses the terminology index and limit for these values.
-\
-\ Like the Pascal FOR-DO the index is always incremented by
-\ 1. Unlike Pascal looping stops when index = limit when
-\ going up or is greater than the limit, where in Pascal the
-\ limit iteration is taken.
+
+\ Like the Pascal FOR-DO the index is always incremented by 1.
+\ Unlike Pascal looping stops when index = limit when going up or
+\ is greater than the limit, where in Pascal the limit iteration
+\ is taken.
 \
 \ When going down, the limit iteration is taken.
 \
@@ -36,11 +35,11 @@ marker ch06
 \
 \ so:
 
-: upness 10 0 do i . 1 +loop ; \ prints 0 1 2 ... 7 8 9 
+: upness    10 0 do i .  1 +loop ; \ prints 0 1 2 ... 7 8 9 
 
-: downewss  -10 0 do i . -1 +loop ; \ prints 0 -1 -2 ... -9 -10
+: downess  -10 0 do i . -1 +loop ; \ prints 0 -1 -2 ... -9 -10
 
-\ A do loop always executes at least once. The check is
+\ A DO loop always executes at least once. The check is
 \ trailing.
 \
 \ The above end rules combined with "at least once" produces
@@ -57,7 +56,7 @@ marker ch06
 \ worry about which stack item I grabs. I just trust that it is
 \ the index.
 \
-\ I' is not in the standard.
+\ I' is not in the standard. I believe R@ does what I' did.
 \
 \ Leaving data on the stack across iterations is allowed and often
 \ makes sense.
@@ -74,16 +73,16 @@ marker ch06
         r%                       \ int amt %         <- calc
         +                        \ int new-amt       <- set up next iter
         dup ." balance " . cr    \ int new-amt
-        loop                     \ int new-amt | 21 2 <- test and iter
-        2drop ;                  \ clear accumulators
-        
-\ amt and int ore swapped to simplify stack manipulation within
-\ the loop--it's easier to sum the running balance with the amount
-\ on top. As written, r% is order agnostic.
+     loop                        \ int new-amt | 21 2 <- test and iter
+     2drop ;                     \ clear accumulators
 
-\ There's a brief discussion of using the index as a condition
-\ for an if statement. The example of line breaking output is
-\ given. Print 256 asterisks with a cr after every 16th.
+\ amt and int ore swapped to simplify stack manipulation within
+\ the loop--it's easier to sum the running balance with the
+\ amount on top. As written, R% is order agnostic.
+
+\ There's a brief discussion of using the index as a condition for
+\ an IF statement. The example of line breaking output is given.
+\ Print 256 asterisks with a cr after every 16th.
 
 : rectangle   256 0 do
     i 16 mod 0= if
@@ -96,6 +95,9 @@ marker ch06
 \ specified nesting limit.
 
 : multiplications  cr 11 1 do dup i * 5 u.r loop drop ; 
+
+\ There is a legacy definition of TABLE in gforth. The redefinition
+\ warning can be ignored.
 
 : table  cr 11 1 do i multiplications loop ;
 
@@ -113,27 +115,27 @@ marker ch06
 \ be 1. Indeed it can be negative, but that's on you.
 
 : pentajumps   50 0 do i . 5 +loop ;
-        
+
 : falling   -10 0 do i . -1 +loop ;
 
 \ Increasing index, the loop terminates when the index has reached
 \ or exceeded the limit.
 
-: upness 5 0 do i . 1 +loop ; \ 0 1 2 3 4
+: upness-2 5 0 do i . 1 +loop ; \ 0 1 2 3 4
 
 \ Decreasing index, the loop terminates when the index has passed
 \ the limit.
 
-: downness -5 0 do i . -1 +loop ; \ 0 1 2 3 4 5
+: downness-2 -5 0 do i . -1 +loop ; \ 0 1 2 3 4 5
 
 \ Indefinite loops -- or non counting loops -- are those that
 \ end based on a true or false test, or not at all.
 \
 \ Forth has two of these.
 \
-\ begin <code> <test> until      -- like the repeat until in Pascal.
+\ BEGIN <code> <test> UNTIL      -- like the repeat until in Pascal.
 \
-\ begin <code> <test> while <code> repeat  -- like a while loop
+\ BEGIN <code> <test> WHILE <code> REPEAT  -- like a while loop
 \
 \ And any of these can become an infinite loop by replacing <test>
 \ with false or 0.
@@ -155,16 +157,18 @@ marker ch06
 \
 \ prints still here still here leaving and out
 
+
 \ Chapter 6 problems.
 \
-\ The problems are a little more interesting now.
+\ The problems are finally getting more interesting.
+
 
 \ 1-4 are a group
-\ 1. Write a word stars that prints n stars.
-\ 2. Define box that prints some number of lines of stars.
-\ 3. Define \slant that prints some number of 10 star lines at
+\ 1. Write a word STARS that prints n stars.
+\ 2. Define BOX that prints some number of lines of STARS.
+\ 3. Define \SLANT that prints some number of 10 star lines at
 \    a right downard slant.
-\ 4. And /slant, left upward slant.
+\ 4. And /SLANT, left upward slant.
 
 : stars ( n -- ) 0 do 42 emit loop ;
 
@@ -180,7 +184,7 @@ marker ch06
     loop
     drop ;             \ n --
 
-\ 5. Rewrite \stars using begin until and begin while repeat.
+\ 5. Rewrite \STARS using BEGIN UNTIL and BEGIN WHILE REPEAT.
 \ In all of these, the number of spaces to achieve the slant
 \ effect is line# +/- n-1.
 
@@ -203,10 +207,8 @@ marker ch06
     until
     drop ; 
 
-\ ******************
-\ 1 3 5 7 11 13 15 17 19
-\ Draw n diamonds, 18 high and 18 wide
-\ 6. Write a word diamonds that prints n large diamonds made up
+
+\ 6. Write a word DIAMONDS that prints n large diamonds made up
 \ of lines of asterisks: from 1 to 19, then 19 to 1, making a
 \ diamond.
 
@@ -218,9 +220,10 @@ marker ch06
 : diamonds ( n -- )
     cr 0 do diamond loop ;
 
-\ 7. Write a word doubled that conditionally leaves the loop
+
+\ 7. Write a word DOUBLED that conditionally leaves the loop
 \ once the balance is doubled. I was too lazy to do a lot of
-\ stack juggling and used a do loop, which is how the book
+\ stack juggling and used a DO LOOP, which is how the book
 \ solution is written.
 
 : doubled          \ book
@@ -237,6 +240,7 @@ marker ch06
     
 \ better formatting and no assumption on how long it will take to
 \ double the balance.
+
 : doubler ( amt int -- )
     over 2* rot rot swap 999 1 do
         cr ." year " i 2 u.r 3 spaces
@@ -245,6 +249,7 @@ marker ch06
             cr cr ." more than doubled in " i . ."  years "
             leave
         then loop 2drop drop ;
+
    
 \ 8. Define a word ** that computes whole number exponential
 \ values. My try works but I don't like it much. The book

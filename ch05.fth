@@ -13,11 +13,13 @@ marker ch05
 \ before anything that uses return values is done.
 \
 \ Words are introduced for parameter stack access. The definition
-\ of i, i' and j are not current. These days i and j are used to
-\ access loop indices. I believe I should be r@.
+\ of I, I' and J are not current. These days I and J are used to
+\ access loop indices (I for current, J for outer level).
 \
+\ I believe I' should be R@.
+
 \ A word to calculate quadriatic roots using the old definitions
-\ is given. quadriatic-p is the text version, while quadriatic-g
+\ is given. QUADRIATIC-P is the text version, while QUADRIATIC-G
 \ uses what I believe is the correct words.
 \ 
 \ a b c x          pforth      gforth
@@ -27,40 +29,42 @@ marker ch05
 \ In gforth either version works, but I suspect that's an accident.
 \ I and J are undefined outside a loop per the standard.
  
-: quadratic-p ( a b c x -- n) >r swap rot i * + r> * + ;
-: quadratic-g ( a b c x -- n) >r swap rot r@ * + r> * + ;
+: quadratic-p ( a b c x -- n ) >r swap rot i * + r> * + ;
+: quadratic-g ( a b c x -- n ) >r swap rot r@ * + r> * + ;
 
-\ While digging into this I learned that not is non-standard.
+\ While digging into this I learned that NOT is non-standard.
 \ pforth implements it as 0= while gforth does not implement
-\ it.
+\ it at all.
 \
-\ pforth implements not as 0=, which is what it was meant to
-\ be a synonym of older forths (readability). invert is -1 xor
-\ in both.
+\ pforth implements NOT as 0=, which is what it was meant to
+\ be a synonym of in many older forths (readability). INVERT is -1 
+\ in the standard.
 \
-\ defining not in gforth as : not 0= ; does what I want, but is
-\ it really the right thing to do?
+\ Defining not in gforth as : NOT 0= ; does what I want, but is
+\ it really the right thing to do? After some consideration, I've
+\ decided that NOT is a bug waiting to happen so I will use 0=.
 
-\ Floating point is introduced but discouraged for most of
-\ the applications Forth is used for. Instead use fixed point
-\ and scale to align decimal points and allow for fractional
-\ values.
 
-\ On page 116 /* (star-slash) and scalars are introduced. The
+\ Floating point is introduced but discouraged for most of the
+\ applications Forth is used for. Instead use fixed point and
+\ scale to align decimal points and allow for fractional values.
+
+\ On page 116 /* (star-slash) and scalars are introduced.
 \
 \ n1 n2 n3 /*       is (n1 * n2)/n3, but the calculation n1*n2
 \ is stored in an 'intermediate result' that is a double and
 \ not a single cell.
 \
-\ so in another language dbl(n1) * dbl(n3) = d
+\ In another language dbl(n1) * dbl(n3) = d
 \ then d/n3 to get the result.
 \
-\ There are rules for signs but I don't worry about them right
-\ now.
+\ There are rules for signed versus unsigned, but I am not worried
+\ about them right now.
 
-\ And here's where cell size starts to show up. The word % defined
-\ as 100 */ properly calculates some values that doing each
-\ operation separately won't.
+\ And here's where cell size starts to show up.
+\
+\ The word % defined\ as 100 */ properly calculates some values
+\ that doing each operation separately won't.
 \
 \ 225 32 % is 72 as is 225 32 * 100 /, but on a 16-bit system
 \ 2000 34 % is 680 but 2000 34 * 100 / is 68000 100 /, which
@@ -76,10 +80,10 @@ marker ch05
 \ A scaled solution is R%, defined as 10 */ 5 + 10 / ; which will
 \ round up to a whole number.
 \
-\ And even better r% that scales to two places. This won't work
+\ And even better R% that scales to two places. This won't work
 \ right on 16-bit systems.
 \ 
-\ take a percentage scaled by 100, rounded.
+\ Take a percentage scaled by 100, rounded.
 \ IE, 50% is 50 not .50
 
 : r% ( n % -- n% ) swap 100 * * 500 + 10000 / ;
@@ -89,12 +93,11 @@ marker ch05
 \
 \ Defer and minimize division.
 \
-\ This leads into using rational approximations for commonly
-\ used constants such as pi or e. There's a good table on
-\ page 122, copied here. I've never needed the arcsec/degree
-\ stuff. The 12th root of 2 relates to music theory. Log and
-\ ln of 2 are useful when computing logs for bases other than
-\ 10 or e.
+\ This leads into using rational approximations for commonly used
+\ constants such as pi or e. There's a good table on page 122,
+\ copied here. I've never needed the arcsec/degree stuff. The
+\ 12th root of 2 relates to music theory. Log and ln of 2 are
+\ useful when computing logs for bases other than 10 or e.
 \
 \ Note that 16384 = 32768 / 2
 \ log = log base 10
@@ -124,13 +127,15 @@ marker ch05
 \ 2) I found a table with a few more constants and some additional
 \ rational approximations, including a couple of 64 bit or 32 bit
 \ unsigned approximations. I've copied that with attribution to my
-\ bit notes folder.
+\ notes folder.
 
 \ Chapter 5 problems
+
 
 \ 1. Write a definition to calculate - ab/c.
  
 : ab/c  ( a b c -- n )  */ negate ;  
+
 
 \ 2. Find the maximum of four numbers on the stack.
 
@@ -138,6 +143,7 @@ marker ch05
     max          ( a b max --  )
     max          ( a max --  )
     max ;        ( -- max )
+
 
 \ 3. and 4. combined -- first we write the forth expressions
 \ for the basic temperature conversions, and then definitions
