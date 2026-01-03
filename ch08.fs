@@ -1,7 +1,6 @@
-\ ch08.fth -- Variables, Constants, and Arrays -- T.Brumley
+\ ch08.fs -- Variables, Constants, and Arrays -- T.Brumley
 
-    marker ch08
-    include TxbWords.fth
+    include TxbWords.fs
 
 \ There are a lot of redefinitions of gforth words. Colors, the
 \ variations of CELL, and a few others. All can be safely ignored
@@ -86,10 +85,10 @@
 \ would be:
 \
 \     VARIABLE eggs
-\     : egg.reset  0 eggs ! ;
+\     : egg-reset  0 eggs ! ;
 \     : egg        1 eggs +! ;
 \ 
-\     egg.reset egg egg egg eggs ? should print 3.
+\     egg-reset egg egg egg eggs ? should print 3.
 \
 \ There is only +!, not a minus bang (makes sense when you think
 \ of stack ordering).
@@ -158,8 +157,8 @@
 \ constant and applied via */.
 
 
-355 113 2CONSTANT PI
-: circle.area ( r -- a ) dup * pi */ ;
+355 113 2constant pi
+: circle-area ( r -- a ) dup * pi */ ;
 
 
 \ Arrays
@@ -226,17 +225,17 @@
 \ CELL+ does not appear immediately useful to me but it's there
 \ for a reason.
 
-8 CONSTANT CELL
-: CELLS  CELL * ; ( n -- bytes to hold that many cells )
-: CELL+  CELL + ; ( addr1 -- addr1+CELL )
+8 constant cell
+: cells  cell * ; ( n -- bytes to hold that many cells )
+: cell+  cell + ; ( addr1 -- addr1+cell )
 
 \ So instead of:
 
-VARIABLE somearray 31 8 * ALLOT      \ allocates 32 item array
+variable somearray 31 8 * allot      \ allocates 32 item array
 
 \ We would do:
 
-CREATE otherarray 32 CELLS ALLOT     \ cleaner
+create otherarray 32 cells allot     \ cleaner
 
 \ And so on, using CELLS for indexing: array[1] = @array + 1 cells,
 \ [0] = @ + 0 cells, and so on. Note there are no range or bounds
@@ -248,7 +247,7 @@ CREATE otherarray 32 CELLS ALLOT     \ cleaner
 \ I suspect that with practice you would automatically filter
 \ what you see the way some people do with parentheses in lisps.
 \
-\ I have since read that the idiom is more like TH, as in "fifth"
+\ I have since read that the idiom is more like TH, as in "fifs"
 \ "firsth" and so on. This is something Moore said he defines
 \ almost immediately if it isn't in a system.
 
@@ -260,49 +259,49 @@ CREATE otherarray 32 CELLS ALLOT     \ cleaner
 \ reject category. Six slots, 0-5.
 
 \ State and constants.
-18 constant weight.reject
-21 constant weight.small
-24 constant weight.medium
-27 constant weight.large
-30 constant weight.extra.large
-0 constant egg.reject       \ 18 < oz
-1 constant egg.small        \ 21 <
-2 constant egg.medium       \ 24 <
-3 constant egg.large        \ 27 <
-4 constant egg.extra.large  \ 30 <
-5 constant egg.error        \ 30 >=
-create carton.counts 6 cells allot
+18 constant weight-reject
+21 constant weight-small
+24 constant weight-medium
+27 constant weight-large
+30 constant weight-extra-large
+0 constant egg-reject       \ 18 < oz
+1 constant egg-small        \ 21 <
+2 constant egg-medium       \ 24 <
+3 constant egg-large        \ 27 <
+4 constant egg-extra-large  \ 30 <
+5 constant egg-error        \ 30 >=
+create carton=counts 6 cells allot
 
-\ Given a carton weight, return its egg.<size> category.
+\ Given a carton weight, return its egg-<size> category.
 : category ( n -- n )
-    dup weight.reject      < if egg.reject      else
-    dup weight.small       < if egg.small       else
-    dup weight.medium      < if egg.medium      else
-    dup weight.large       < if egg.large       else
-    dup weight.extra.large < if egg.extra.large else
-                                egg.error
+    dup weight-reject      < if egg-reject      else
+    dup weight-small       < if egg-small       else
+    dup weight-medium      < if egg-medium      else
+    dup weight-large       < if egg-large       else
+    dup weight-extra.large < if egg-extra.large else
+                                egg-error
     then then then then then swap drop ;
 
-\ Given an egg.<size> print the size label.
+\ Given an egg-<size> print the size label.
 : label ( n -- )
-    dup egg.reject      = if ." reject "      else
-    dup egg.small       = if ." small "       else
-    dup egg.medium      = if ." medium "      else
-    dup egg.large       = if ." large "       else
-    dup egg.extra.large = if ." extra large " else
+    dup egg-reject      = if ." reject "      else
+    dup egg-small       = if ." small "       else
+    dup egg-medium      = if ." medium "      else
+    dup egg-large       = if ." large "       else
+    dup egg-extra.large = if ." extra large " else
                              ." ERROR "
     then then then then then drop ;
 
 \ Initialize.
-: reset.counts ( -- ) carton.counts 6 cells 0 fill ;
+: reset-counts ( -- ) carton-counts 6 cells 0 fill ;
 
 \ Make sure they start at zeros.
-reset.counts
+reset-counts
 
-\ Map egg.<size> category into carton.counts index.
-: counter ( n -- ) cells carton.counts + ;
+\ Map egg-<size> category into carton.counts index.
+: counter ( n -- ) cells carton-counts + ;
 
-\ Increment carton count for this egg.<size>.
+\ Increment carton count for this egg-<size>.
 : tally ( n -- ) counter 1 swap +! ;
 
 \ Compose something useful. eggsize:
@@ -608,7 +607,7 @@ ttboard 2 cells erase
     255 = if ." O" exit then
     space ;
 
-: horizontal.bar 10 0 do '-' emit loop ;
+: horizontal-bar 10 0 do '-' emit loop ;
 
 : print-row ( n -- , n is row # 1 2 or 3 )
     1- 3 *         \ map row to first glyph
@@ -621,9 +620,9 @@ ttboard 2 cells erase
 
 : print-board
     1 print-row cr
-    horizontal.bar cr
+    horizontal-bar cr
     2 print-row cr
-    horizontal.bar cr
+    horizontal-bar cr
     3 print-row cr ;
 
-\ End of ch08.fth
+\ End of ch08.fs

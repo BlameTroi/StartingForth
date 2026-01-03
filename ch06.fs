@@ -1,6 +1,4 @@
-\ ch06.fth -- Throw it for a Loop -- T.Brumley
-
-marker ch06
+\ ch06.fs -- Throw it for a Loop -- T.Brumley
 
 \ Chapter 6 builds on Chapter 4's decision making examples with
 \ the introduction of loops. This was pretty straight forward.
@@ -286,4 +284,4 @@ marker ch06
     then
     ;
 
-\ End of ch06.fth.
+\ End of ch06.fs.

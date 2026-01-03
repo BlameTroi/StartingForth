@@ -1,7 +1,6 @@
-\ ch10.fth -- I/O and You -- T.Brumley
+\ ch10.fs -- I/O and You -- T.Brumley
 
-marker ch10
-include TxbWords.fth
+include TxbWords.fs
 
 \ The various TH words get redefined warnings in gforth, these and
 \ others are safe to ignore.
@@ -30,8 +29,7 @@ include TxbWords.fth
 
 \ Deblocked buzzphrase generator v1
 
-use ch10-blocks.fb       \ no file is needed, this just lets gforth
-                         \ create a scratch file
+use temporary-blocks.fb  \ can safely be deleted
 
 : >block-line ( addr u u u -- )
    swap block swap 64 * + \ addr u blkaddr
@@ -43,22 +41,22 @@ use ch10-blocks.fb       \ no file is needed, this just lets gforth
 \ backing file "blocks.fb" but I'm not concerned with its
 \ contents.
 
-232 block 1024 '*' fill update
-233 block 1024 blank    update
+132 block 1024 '*' fill update
+133 block 1024 blank    update
 flush
 
 \  0                   20                  40
-s" INTEGRATED          MANAGEMENT          CRITERIA      " 232 0 >block-line
-s" TOTAL               ORGANIZATION        FLEXIBILITY   " 232 1 >block-line
-s" SYSTEMATIZED        MONITORED           CAPABILITY    " 232 2 >block-line
-s" PARALLEL            RECIPROCAL          MOBILITY      " 232 3 >block-line
-s" FUNCTIONAL          DIGITAL             PROGRAMMING   " 232 4 >block-line
-s" RESPONSIVE          LOGISTICAL          CONCEPTS      " 232 5 >block-line
-s" OPTIMAL             TRANSITIONAL        TIME PHASING  " 232 6 >block-line
-s" SYNCHRONIZED        INCREMENTAL         PROJECTIONS   " 232 7 >block-line
-s" COMPATIBLE          THIRD GENERATION    HARDWARE      " 232 8 >block-line
-s" QUALIFIED           POLICY              THROUGH-PUT   " 232 9 >block-line 
-s" PARTIAL             DECISION            ENGINEERING   " 232 10 >block-line
+s" INTEGRATED          MANAGEMENT          CRITERIA      " 132 0 >block-line
+s" TOTAL               ORGANIZATION        FLEXIBILITY   " 132 1 >block-line
+s" SYSTEMATIZED        MONITORED           CAPABILITY    " 132 2 >block-line
+s" PARALLEL            RECIPROCAL          MOBILITY      " 132 3 >block-line
+s" FUNCTIONAL          DIGITAL             PROGRAMMING   " 132 4 >block-line
+s" RESPONSIVE          LOGISTICAL          CONCEPTS      " 132 5 >block-line
+s" OPTIMAL             TRANSITIONAL        TIME PHASING  " 132 6 >block-line
+s" SYNCHRONIZED        INCREMENTAL         PROJECTIONS   " 132 7 >block-line
+s" COMPATIBLE          THIRD GENERATION    HARDWARE      " 132 8 >block-line
+s" QUALIFIED           POLICY              THROUGH-PUT   " 132 9 >block-line 
+s" PARTIAL             DECISION            ENGINEERING   " 132 10 >block-line
 
 update flush
 
@@ -67,7 +65,7 @@ update flush
 \ the third column (noun).
 
 : buzz ( n -- )
-   232 block +            ( first char on line 0 )
+   132 block +            ( first char on line 0 )
    11 choose 64 *         ( select line 0-10 )
    +                      ( word on line )
    20 -trailing type ;    ( readjust length for print )
@@ -100,7 +98,7 @@ paragraph
 
 \ Copy the buzzword table to another block.
 
-232 block 233 block 1024 move save-buffers
+132 block 133 block 1024 move update save-buffers
 
 : change ( blk fr to -- )
    rot block dup 1024 + swap  ( fr to end-block start-block )
@@ -112,38 +110,38 @@ paragraph
    loop                       ( leaving from to on stack )
    2drop ;
 
-233 'O' 'o' change update
-233 list
+133 'O' 'o' change update
+133 list
 
 
 \ 2. Define a word called FORTUNE which will print a preiction at
 \ your terminal. The prediction should be chosen from a block of
 \ 16 lines of 64 characters, remove trailing blanks.
 
-234 block 1024 blank update flush
+134 block 1024 blank update flush
 
-s" When everyone in the world sees beauty, then ugly exists." 234 0 >block-line
-s" What is and what is not create each other." 234 1 >block-line
-s" High and low rest on each other." 234 2 >block-line
-s" First and last follow each other." 234 3 >block-line
-s" What’s the difference between yes and no?" 234 4 >block-line
-s" What’s the difference between beautiful and ugly?" 234 5 >block-line
-s" Heavy is the root of light." 234 6 >block-line
-s" What should be shrunken must first be stretched." 234 7 >block-line
-s" What should be weakened must first be strengthened." 234 8 >block-line
-s" What should be abolished must first be cherished." 234 9 >block-line
-s" What should be deprived must first be enriched." 234 10 >block-line
-s" What has no substance can penetrate what has no opening." 234 11 >block-line
-s" If princes and kings were not exalted they might be overthrown." 234 12 >block-line
-s" Ruling a great country is like cooking a small fish." 234 13 >block-line
-s" In lightness the root is lost. In haste the ruler is lost." 234 14 >block-line
-s" The Way is eternal. Until your last day you are free from peril." 234 15 >block-line
+s" When everyone in the world sees beauty, then ugly exists." 134 0 >block-line
+s" What is and what is not create each other." 134 1 >block-line
+s" High and low rest on each other." 134 2 >block-line
+s" First and last follow each other." 134 3 >block-line
+s" What’s the difference between yes and no?" 134 4 >block-line
+s" What’s the difference between beautiful and ugly?" 134 5 >block-line
+s" Heavy is the root of light." 134 6 >block-line
+s" What should be shrunken must first be stretched." 134 7 >block-line
+s" What should be weakened must first be strengthened." 134 8 >block-line
+s" What should be abolished must first be cherished." 134 9 >block-line
+s" What should be deprived must first be enriched." 134 10 >block-line
+s" What has no substance can penetrate what has no opening." 134 11 >block-line
+s" If princes and kings were not exalted they might be overthrown." 134 12 >block-line
+s" Ruling a great country is like cooking a small fish." 134 13 >block-line
+s" In lightness the root is lost. In haste the ruler is lost." 134 14 >block-line
+s" The Way is eternal. Until your last day you are free from peril." 134 15 >block-line
 update flush
 
 \ Select a line from the Taoist sayings block.
 
 : fortune ( -- )
-   16 choose 64 * 234 block + 64 type cr ;
+   16 choose 64 * 134 block + 64 type cr ;
 
 
 \ 3. Buddha brings you the twelve years of animals.
@@ -272,7 +270,7 @@ create me   14 allot
 \ cell. This access word should also call UPDATE. Test your work
 \ so far.
 
-239 constant my-block-no
+139 constant my-block-no
 variable my-block
 my-block-no my-block !
 
@@ -328,7 +326,7 @@ reset-my-block
 \ I see solutions for these bugs but they don't add value to the
 \ problem.
 
-: ENTER ( -- , "enter num,num" )
+: enter ( -- , "enter num,num" )
    0 0                     \ double word for >number
    ccomma word count       \ ud c-addr u1
    >number                 \ ud c-addr+ u2
@@ -349,4 +347,4 @@ reset-my-block
    then ;
 
 
-\ End of ch10.fth
+\ End of ch10.fs

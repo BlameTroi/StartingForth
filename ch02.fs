@@ -1,6 +1,4 @@
-\ ch02.fth -- How to get results -- T.Brumley
-
-marker ch02
+\ ch02.fs -- How to get results -- T.Brumley
 
 \ Chapter 2 is long explanation of using the stack and the words
 \ commonly used for stack juggling. It's a slog if one isn't
@@ -274,7 +272,7 @@ marker ch02
 \ returns the number of cartons (dozens) and how many
 \ are left over.
 
-: egg.cartons    ( eggs -- left-over filled-cartons )
+: egg-cartons    ( eggs -- left-over filled-cartons )
     12 /mod swap ;
 
-\ end of ch02.fth
+\ end of ch02.fs

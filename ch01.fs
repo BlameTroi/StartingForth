@@ -1,9 +1,7 @@
-\ ch01.fth -- Fundamental Forth -- T.Brumley
+\ ch01.fs -- Fundamental Forth -- T.Brumley
 
 \ Definitions from working through the chapter along with any
 \ solved problems.
-
-marker ch01      
 
 \ Chapter 1 is an introduction to the basic syntax of Forth.
 
@@ -64,4 +62,4 @@ marker ch01
 \ ASIDE: Accidental security against malicious patching by
 \ redefining words.
 
-\ end ch01.fth
+\ end ch01.fs

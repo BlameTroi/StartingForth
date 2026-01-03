@@ -1,6 +1,4 @@
-\ ch07.fth -- A Number of Kinds of Numbers -- T.Brumley
-
-marker ch07
+\ ch07.fs -- A Number of Kinds of Numbers -- T.Brumley
 
 \ Chapter 7 discusses double precision numbers, unsigned versions
 \ of both single and double precision, and more words to operate
@@ -165,13 +163,14 @@ marker ch07
 \ MS to delay for at least some number of milliseconds. This is in
 \ the Facility extensions.
 
-: longish.pause ( -- ) 50000 0 do i drop loop ;
+: longish-pause ( -- ) \ 50000 0 do i drop loop ;
+   500 ms ;
 
 : beep ( -- )
     3 0 do
         7 emit
         ." BEEP "
-        longish.pause
+        longish-pause
     loop ;
 
 
@@ -366,4 +365,4 @@ marker ch07
 \ Note the visual confusion working from right to left can cause
 \ if you aren't paying attention.
 
-\ End of ch07.fth
+\ End of ch07.fs

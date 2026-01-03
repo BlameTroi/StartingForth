@@ -1,6 +1,4 @@
-\ ch05.fth -- The Philosophy of Fixed Point -- T.Brumley
-
-marker ch05
+\ ch05.fs -- The Philosophy of Fixed Point -- T.Brumley
 
 \ Chapter 5 explains the virtues of fixed point and scaling and
 \ introduces additional operators. This is the first time the
@@ -188,4 +186,4 @@ marker ch05
 : k>f   ( k -- f )
    k>c c>f ;
     
-\ End of ch05.fth
+\ End of ch05.fs

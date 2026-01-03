@@ -1,6 +1,4 @@
-\ ch11.fth -- Extending the Compiler -- T.Brumley
-
-marker ch11
+\ ch11.fs -- Extending the Compiler -- T.Brumley
 
 \ Chapter 11 explores the compiler, defining words, and compiling
 \ words. This is Forth's "secret power" and the most important
@@ -239,4 +237,4 @@ marker ch11
    drop ;        \ discard old input buffer offset
 
 
-\ End of ch11.fth
+\ End of ch11.fs

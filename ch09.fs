@@ -1,8 +1,6 @@
-\ ch09.fth -- Under the Hood -- T.Brumley
+\ ch09.fs -- Under the Hood -- T.Brumley
 
-   marker ch09
-   require TxbWords.fth          \ random and a couple of others
-
+   require TxbWords.fs          \ random and a couple of others
 
 \ Chapter 9 examines the compilation and execution of Forth.
 \ Some of the details are likley different between FIG and ANS
@@ -281,4 +279,4 @@ initialize-branch-table
 : test-branch-table ( -- )
    11 -1 do i dup cr . space do-it loop cr ;
 
-\ End of ch09.fth
+\ End of ch09.fs

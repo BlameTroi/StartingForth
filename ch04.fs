@@ -1,6 +1,4 @@
-\ ch04.fth -- Decisions, Decisions -- T.Brumley
-
-marker ch04
+\ ch04.fs -- Decisions, Decisions -- T.Brumley
 
 \ Chapter 4 covers decisions and branching. Here we start to
 \ see "programming".
@@ -47,7 +45,7 @@ marker ch04
 
 \ 4. Print number sign.
 
-: sign.test ( nn -- , prints positive, negative, or zero )
+: sign-test ( nn -- , prints positive, negative, or zero )
     dup if
         0< if ." negative" else ." positive" then
     else ." zero" drop then
@@ -135,4 +133,4 @@ marker ch04
        ." not between" 2drop
     then ;      
 
-\ End ch04.fth.
+\ End ch04.fs.
