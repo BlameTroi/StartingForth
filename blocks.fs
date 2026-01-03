@@ -1,6 +1,4 @@
-\ blocks.fth -- An attempt at the optional Block word set for pforth -- T.Brumley.
-
-   marker block-writer
+\ blocks.fs -- An attempt at the optional Block word set for pforth -- T.Brumley.
 
 (
    Starting Forth and some other vintage texts assume the
@@ -144,4 +142,4 @@ variable BLK        ( -- a-addr )
 
 \ I don't think I'll do this if I can avoid it.
 
-\ End of blocks.fth
+\ End of blocks.fs

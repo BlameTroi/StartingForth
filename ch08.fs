@@ -270,7 +270,7 @@ create otherarray 32 cells allot     \ cleaner
 3 constant egg-large        \ 27 <
 4 constant egg-extra-large  \ 30 <
 5 constant egg-error        \ 30 >=
-create carton=counts 6 cells allot
+create carton-counts 6 cells allot
 
 \ Given a carton weight, return its egg-<size> category.
 : category ( n -- n )
@@ -278,7 +278,7 @@ create carton=counts 6 cells allot
     dup weight-small       < if egg-small       else
     dup weight-medium      < if egg-medium      else
     dup weight-large       < if egg-large       else
-    dup weight-extra.large < if egg-extra.large else
+    dup weight-extra-large < if egg-extra-large else
                                 egg-error
     then then then then then swap drop ;
 
@@ -288,7 +288,7 @@ create carton=counts 6 cells allot
     dup egg-small       = if ." small "       else
     dup egg-medium      = if ." medium "      else
     dup egg-large       = if ." large "       else
-    dup egg-extra.large = if ." extra large " else
+    dup egg-extra-large = if ." extra large " else
                              ." ERROR "
     then then then then then drop ;
 
