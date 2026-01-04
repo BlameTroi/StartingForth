@@ -3,29 +3,32 @@
 \ Chapter 5 explains the virtues of fixed point and scaling and
 \ introduces additional operators. This is the first time the
 \ cell size has caused noticeable issues. Double precision was
-\ mandatory in the era of 16 bit computers. The words are basically
-\ the same but the boundary/size are different.
-
+\ mandatory in the era of 16 bit computers. The words are
+\ basically the same but the boundary/size are different.
+\
 \ The return stack is introduced as a convenient place to stash
 \ some values with the requirement that the stack is restored
 \ before anything that uses return values is done.
 \
-\ Words are introduced for parameter stack access. The definition
-\ of I, I' and J are not current. These days I and J are used to
-\ access loop indices (I for current, J for outer level).
+\ Words are introduced for parameter stack access. The
+\ definition of I, I' and J are not current. These days I and
+\ J are used to access loop indices (I for current, J for
+\ outer level).
 \
 \ I believe I' should be R@.
 
-\ A word to calculate quadriatic roots using the old definitions
-\ is given. QUADRIATIC-P is the text version, while QUADRIATIC-G
-\ uses what I believe is the correct words.
+\ A word to calculate quadriatic roots using the old
+\ definitions is given. QUADRIATIC-P is the text version,
+\ while QUADRIATIC-G uses what I believe is the correct
+\ words.
 \ 
 \ a b c x          pforth      gforth
 \ 2 7 9 3    -p      30         48
 \ 2 7 9 3    -g      48         48
 \ 
-\ In gforth either version works, but I suspect that's an accident.
-\ I and J are undefined outside a loop per the standard.
+\ In gforth either version works, but I suspect that's and
+\ accident. I and J are undefined outside a loop per the
+\ standard.
  
 : quadratic-p ( a b c x -- n ) >r swap rot i * + r> * + ;
 : quadratic-g ( a b c x -- n ) >r swap rot r@ * + r> * + ;
@@ -35,17 +38,19 @@
 \ it at all.
 \
 \ pforth implements NOT as 0=, which is what it was meant to
-\ be a synonym of in many older forths (readability). INVERT is -1 
-\ in the standard.
+\ be a synonym of in many older forths (readability). INVERT is
+\ -1 in the standard.
 \
 \ Defining not in gforth as : NOT 0= ; does what I want, but is
-\ it really the right thing to do? After some consideration, I've
-\ decided that NOT is a bug waiting to happen so I will use 0=.
+\ it really the right thing to do? After some consideration,
+\ I've decided that NOT is a bug waiting to happen so I will
+\ use 0=.
 
 
 \ Floating point is introduced but discouraged for most of the
 \ applications Forth is used for. Instead use fixed point and
-\ scale to align decimal points and allow for fractional values.
+\ scale to align decimal points and allow for fractional
+\ values.
 
 \ On page 116 /* (star-slash) and scalars are introduced.
 \
@@ -56,8 +61,8 @@
 \ In another language dbl(n1) * dbl(n3) = d
 \ then d/n3 to get the result.
 \
-\ There are rules for signed versus unsigned, but I am not worried
-\ about them right now.
+\ There are rules for signed versus unsigned, but I am not
+\ worried about them right now.
 
 \ And here's where cell size starts to show up.
 \
@@ -68,15 +73,16 @@
 \ 2000 34 % is 680 but 2000 34 * 100 / is 68000 100 /, which
 \ won't work right as 68000 is won't fit in 16 bits (65534).
 \
-\ Then there's a discussion of using scaling to handle fractional
-\ results. The example of taking 32% of to two places illustrates.
+\ Then there's a discussion of using scaling to handle
+\ fractional results. The example of taking 32% of to two
+\ places illustrates.
 \
 \ 225 = 72.00
 \ 226 = 72.32
 \ 227 = 72.64
 \
-\ A scaled solution is R%, defined as 10 */ 5 + 10 / ; which will
-\ round up to a whole number.
+\ A scaled solution is R%, defined as 10 */ 5 + 10 / ; which
+\ still round up to a whole number.
 \
 \ And even better R% that scales to two places. This won't work
 \ right on 16-bit systems.
@@ -86,24 +92,25 @@
 
 : r% ( n % -- n% ) swap 100 * * 500 + 10000 / ;
 \
-\ More factoring and using rational numbers instead of irrational
-\ are discussed.
+\ More factoring and using rational numbers instead of
+\ irrational are discussed.
 \
 \ Defer and minimize division.
 \
-\ This leads into using rational approximations for commonly used
-\ constants such as pi or e. There's a good table on page 122,
-\ copied here. I've never needed the arcsec/degree stuff. The
-\ 12th root of 2 relates to music theory. Log and ln of 2 are
-\ useful when computing logs for bases other than 10 or e.
+\ This leads into using rational approximations for commonly
+\ used constants such as pi or e. There's a good table on page
+\ 122, copied here. I've never needed the arcsec/degree stuff.
+\ The 12th root of 2 relates to music theory. Log and ln of 2
+\ are useful when computing logs for bases other than 10 or
+\ e.
 \
 \ Note that 16384 = 32768 / 2
 \ log = log base 10
 \ ln = log base e
 \ degrees and arcsecs for conversions
-\ and of course c is the speed of light in a vacuum in meters/second.
-\ The value should be 2.99E8, so that's 299.79248 million meters
-\ per second.
+\ and of course c is the speed of light in a vacuum in
+\ meters/second. The value should be 2.99E8, so that's
+\ 299.79248 million meters per second.
 \
 \ Constant          approx   16 bit rational   error
 \ 
@@ -121,11 +128,11 @@
 \
 \ * 22-bit 
 \
-\ While researching some of the values I didn't know (12th root of
-\ 2) I found a table with a few more constants and some additional
-\ rational approximations, including a couple of 64 bit or 32 bit
-\ unsigned approximations. I've copied that with attribution to my
-\ notes folder.
+\ While researching some of the values I didn't know (12th root
+\ of 2) I found a table with a few more constants and some
+\ additional rational approximations, including a couple of 64
+\ bit or 32 bit unsigned approximations. I've copied that with
+\ attribution to my notes folder.
 
 \ Chapter 5 problems
 
@@ -180,10 +187,10 @@
 : c>k   ( c -- k )
    10 * 2731 + 10 / ;
 : k>c   ( k -- c )
-   10 * 2731 - 10 /  ;
+   10 * 2731 - 10 / ;
 : f>k   ( f -- k )
    f>c c>k ;
 : k>f   ( k -- f )
    k>c c>f ;
-    
+
 \ End of ch05.fs

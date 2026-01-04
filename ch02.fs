@@ -1,25 +1,26 @@
 \ ch02.fs -- How to get results -- T.Brumley
 
-\ Chapter 2 is long explanation of using the stack and the words
-\ commonly used for stack juggling. It's a slog if one isn't
-\ familiar with postfix or Reverse Polish Notation.
+\ Chapter 2 is long explanation of using the stack and the
+\ words commonly used for stack juggling. It's a slog if one
+\ isn't familiar with postfix or Reverse Polish Notation.
 \
-\ Doubles are introduced but the examples are from the 16-bit era.
-\ The words work the same (cell pairs instead of cell). There is
-\ a part of the standard that says certain punctuatin is expected
-\ to create a double. Pforth doesn't do this, but gforth does.
+\ Doubles are introduced but the examples are from the 16-bit
+\ era. The words work the same (cell pairs instead of cell).
+\ There is a part of the standard that says certain punctuatin
+\ is expected to create a double. Pforth doesn't do this, but
+\ gforth does.
 \
-\ 1 puts one on the top of the stack
-\ 1. puts one and zero on the top of the stack
+\ 1 puts one on the top of the stack 1. puts one and zero on
+\ the top of the stack
 \
-\ The standard says the high half of the word is stored on the top
-\ of the low half.
+\ The standard says the high half of the word is stored on the
+\ top of the low half.
 \
-\ 12.34 .s <2> 1234 0     NOTE: the "decimal point" isn't really
-\                         anything other than a "this is a double"
-\                         indicator.
+\ 12.34 .s <2> 1234 0  NOTE: the "decimal point" isn't really
+\                      anything other than a "this is a double"
+\                      indicator.
  
-\ Calculator-style practice problems
+\ Calculator-style practice problems:
 \ 
 \ Converting infix to postfix exercises/quizzes are worth
 \ doing for practice (wax-on, wax-off).
@@ -54,8 +55,7 @@
 
 \ Definition-style practice problems
 \ 
-\ From calculator to definition style, demonstrated
-\ using unit conversions.
+\ From calculator to definition style using unit conversions.
 
 \ conversions based on inches
 
@@ -85,7 +85,7 @@
 \ 1.     ab + c
 
 : 2b1    ( a b c -- n )
-     rot * + ;
+   rot * + ;
  
 \ 2.     a - 4b           
 \        ------   +   c 
@@ -94,9 +94,9 @@
 : b2b2 4 * - 6 / + ; ( c a b -- n )
 
 : 2b2             ( a b c -- n )
-    rot           ( c b a -- )
-    swap 4 *      ( c a 4b -- )
-    - 6 /  +  ;   ( -- n )
+   rot           ( c b a -- )
+   swap 4 *      ( c a 4b -- )
+   - 6 /  +  ;   ( -- n )
 
 \ 3.      a
 \       ----
@@ -121,7 +121,7 @@
 : b2b5 2 * 3 + * ; ( a a -- n )
 
 : 2b5             ( a -- n )
-    dup 2* 3 + * ;
+   dup 2* 3 + * ;
 
 \ 6.    a - b
 \       -----
@@ -130,7 +130,7 @@
 : b2b6 - swap / ; ( c a b -- n )
 
 : 2b6            ( a b c -- n )
-    -rot - swap / ;
+   -rot - swap / ;
 
 
 \ I need more practice with the stack swizzling words.
@@ -142,22 +142,22 @@
 \ FLIP3 ( a b c -- c b a )
 
 : flip3  ( a b c -- c b a )
-    rot rot swap ;
+   rot rot swap ;
 
 \ 2. Write an OVER that does not use OVER.
 
 : revo1  ( a b -- a b a )
-    swap dup      ( b a a -- )
-    rot swap ;    ( -- a b a )
+   swap dup      ( b a a -- )
+   rot swap ;    ( -- a b a )
 
 : revo2  ( a b -- a b a )
-    2dup drop ;   ( -- a b a )
+   2dup drop ;   ( -- a b a )
 
 \ 3. Write <ROT (these days known as -ROT) so that
 \ a b c becomes c a b.
 
 : <rot   ( a b c -- c a b )
-    rot rot ;
+   rot rot ;
 
 \ Write definitions for these equations with
 \ the indicated stack effects.
@@ -167,21 +167,21 @@
 \        n
 
 : 2c4    ( n -- result )
-    dup 1+ swap / ;
+   dup 1+ swap / ;
 
 \ 5.  x(7x + 5)     ( x -- result )
 
 : 2c5     ( x -- result )
-    dup 7 * 5 + * ;
+   dup 7 * 5 + * ;
 
 \ 6. 9a^2 - ba    ( a b -- result )
 
 : 2c6      ( a b -- result )
-    over *
-    swap dup * 9 * swap - ;
+   over *
+   swap dup * 9 * swap - ;
 
 : b2c6     ( a b -- result )
-    over 9 * swap - * ;
+   over 9 * swap - * ;
 
 
 \ Chapter problems
@@ -196,15 +196,16 @@
 \ on the stack.  ( 1 2 3 4 -- 4 3 2 1 )
 
 : rev4  ( a b c d -- d c b a )
-    swap 2swap swap ;
+   swap 2swap swap ;
 
 
 \ 3. Write 3DUP ( a b c -- a b c a b c )
 
 : 3dup        ( a b c -- a b c a b c )
-    dup 2over rot ;
+   dup 2over rot ;
 
-\ Write expressions for the equations with the specified effects.
+\ Write expressions for the equations with the specified
+\ effects.
 
 
 \ NOTE: 2p4 and 2p5 are floating point constants/literals in
@@ -213,31 +214,31 @@
 
 \ 4.  a^2 + ab + c        ( c a b -- result )
 
-: 2p4            ( c a b -- result )
-    over         ( c a b a -- )
-    *            ( c a ab -- )
-    swap         ( c ab a -- )
-    dup *        ( c ab a^2 -- )
-    + + ;        ( -- result )
+: 2p4           ( c a b -- result )
+   over         ( c a b a -- )
+   *            ( c a ab -- )
+   swap         ( c ab a -- )
+   dup *        ( c ab a^2 -- )
+   + + ;        ( -- result )
 
 
 \ 5.   a - b
 \      -----     ( a b -- result )
 \      a + b
 
-: 2p5            ( a b -- result )
-    2dup         ( a b a b -- )
-    -            ( a b a-b -- )
-    rot rot +    ( a-b a+b -- )
-    / ;          ( -- result )
+: 2p5           ( a b -- result )
+   2dup         ( a b a b -- )
+   -            ( a b a-b -- )
+   rot rot +    ( a-b a+b -- )
+   / ;          ( -- result )
 
 
 \ 6. Write a set of words to calculate a prison sentence.
 \
 \ Spec:
 \
-\ Prison sentence calculator. Convicted of <crime> gets <years> to
-\ serve.
+\ Prison sentence calculator. Convicted of <crime> gets <years>
+\ to serve.
 \
 \ convicted-of arson homicide tax-evasion
 \ will-serve 35 years
@@ -257,22 +258,22 @@
 : tax-evasion 5 + ;
 
 \ Then we have the prelude which prepares the stack for the
-\ list of criems.
+\ list of crimes.
 
 : convicted-of ( -- 0 , )
-    0 ;
+   0 ;
 
 \ Finally the conclusion which just prints the total sentence.
 
 : will-serve ( years -- , )
-    . ." years" ;
+   . ." years" ;
 
 
-\ 7. Write egg.cartons that takes a number of eggs and
-\ returns the number of cartons (dozens) and how many
-\ are left over.
+\ 7. Write egg.cartons that takes the number of eggs and
+\ returns the number of cartons (dozens) and how many are
+\ left over.
 
 : egg-cartons    ( eggs -- left-over filled-cartons )
-    12 /mod swap ;
+   12 /mod swap ;
 
 \ end of ch02.fs

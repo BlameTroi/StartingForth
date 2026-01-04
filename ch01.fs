@@ -17,12 +17,10 @@
    cr 30 spaces ;
 
 : blip
-   margin
-   star ;
+   margin star ;
 
 : bar
-   margin
-   5 stars ;
+   margin 5 stars ;
 
 : f                     \ composition
    bar
@@ -34,9 +32,9 @@
 
 \ Problems: 
 
-\ 1. Define `gift` to print some gift name, `giver` to print then
-\ name of a person giving a gift, and `thanks` using `gift` and
-\ `giver` to print a thank you message.
+\ 1. Define `gift` to print some gift name, `giver` to print
+\ then name of a person giving a gift, and `thanks` using
+\ `gift` and `giver` to print a thank you message.
 
 : gift   ( -- )  ." gaming dice" ;
 : giver  ( -- )  ." Stephanie" ;
@@ -44,9 +42,9 @@
    cr ." Dear " giver ." ," cr
    5 spaces ." Thanks for the " gift ." ." ;
 
-\ 2. Define ten-less that takes the number on the stack, subtracts
-\ 10, and leaves the result on the. (NOTE: `-` has not been
-\ introduced, so use `+` instead.)
+\ 2. Define ten-less that takes the number on the stack,
+\ subtracts 10, and leaves the result on the. (NOTE: `-` has
+\ not been introduced, so use `+` instead.)
 
 : ten-less   ( n -- n-10 )
    -10 + ;
@@ -55,11 +53,11 @@
 \ again. Why is the old definition of `giver` still used by
 \ `thanks`.
 
-\ Order matters. When a word is compiled, it is bound to the words
-\ before it in the dictionary. The new definition shadows the
-\ old. A bit like closures.
+\ Order matters. When a word is compiled, it is bound to the
+\ words before it in the dictionary. The new definition
+\ shadows the old. A bit like closures.
 
 \ ASIDE: Accidental security against malicious patching by
 \ redefining words.
 
-\ end ch01.fs
+\ End of ch01.fs

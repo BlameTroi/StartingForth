@@ -1,6 +1,6 @@
 \ ch09.fs -- Under the Hood -- T.Brumley
 
-   require TxbWords.fs          \ random and a couple of others
+require TxbWords.fs          \ random and a couple of others
 
 \ Chapter 9 examines the compilation and execution of Forth.
 \ Some of the details are likley different between FIG and ANS
@@ -10,13 +10,13 @@
 \ modern langauges.
 
 
-\ I did most of the work for this chapter in pforth. While there
-\ will be some differences in low level details, for my purposes
-\ this is sufficient.
-\
+\ I did most of the work for this chapter in pforth. While
+\ there will be some differences in low level details, for my
+\ purposes this is sufficient.
+
 \ I've since started using gforth since it comes with the BLOCK
-\ word set and I need that for some things, but either seems like
-\ a good Forth to me.
+\ word set and I need that for some things, but either seems
+\ like a good Forth to me.
 
 
 \ ' (TICK) returns an execution token in ANS. It may not be a
@@ -38,9 +38,9 @@
 \ There's a lot of power here.
 \
 \ The line between compilation vs interpretation is a bit fuzzy
-\ but very important. Several of these words are marked as being
-\ compile time or execution time only. Interpretation seems to
-\ be part of execution.
+\ but very important. Several of these words are marked as
+\ being compile time or execution time only. Interpretation
+\ seems to be part of execution.
 \
 \ We'll learn more about this in chapter 11.
 \
@@ -67,8 +67,8 @@
 
 \ Dictionary entries:
 \
-\ Everything we define ends up in the dictionary. Each entry has
-\ a header and body.
+\ Everything we define ends up in the dictionary. Each entry
+\ has a header and body.
 \
 \ For constants or variables:
 \ 
@@ -158,15 +158,16 @@
 \ but it does. So the semantics of ' and execute are unchanged,
 \ just the actual value returned.
 \
-\ I clearly need to revisit this. For now I'll annotate the code
-\ and move on. I don't expect to use this during Advent of Code.
+\ I clearly need to revisit this. For now I'll annotate the
+\ code and move on. I don't expect to use this during Advent of
+\ Code.
 
 
-\ Chapter 2 problem 6 is a court sentencing application. A judge
-\ enters "convicted-of crime1 crime2 crime3 will-serve" and is 
-\ presented with a total sentence. Each "crime" is "+ duration"
-\ and "convicted-of" just puts 0 on the stack. "will-serve" is
-\ just a print of the top of the stack.
+\ Chapter 2 problem 6 is a court sentencing application. A
+\ judge enters "convicted-of crime1 crime2 crime3 will-serve"
+\ and is presented with a total sentence. Each "crime" is "+
+\ duration" and "convicted-of" just puts 0 on the stack.
+\ "will-serve" is just a print of the top of the stack.
 \ 
 \ This is all happening at interpretation time. As words are
 \ evaluated the stack effects are applied. What COUNTS does it
@@ -174,8 +175,8 @@
 \ it to be a "CRIMEn". It then executes that word some number
 \ of times (the prefix N to COUNTS).
 \
-\ Reminder, this is only in the context of the code from chapter
-\ 2 problem 6.
+\ Reminder, this is only in the context of the code from
+\ chapter 2 problem 6.
  
 : counts        \ ? n -- , executes next word n times 
    '            \ ? n xt   xt of next word of input stream 
@@ -194,11 +195,11 @@
 
 \ 2. What is the beginning address of your private dictionary?
 
-\ I don't have a direct way to find this from what I know so far
-\ but HERE returns the next available slot in the dictionary.
-\ It seems to me that in pforth the XT is an offset, so if I
-\ take HERE, then define a new word and get the XT of that word
-\ I should be close:
+\ I don't have a direct way to find this from what I know so
+\ far but HERE returns the next addres of the next byte in the
+\ the dictionary. It seems to me that in pforth the XT is an
+\ offset, so if I take HERE, then define a new word and get the
+\ XT of that word I should be close:
 
 cr ." I think the dictionary starts at "
 HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
@@ -213,16 +214,18 @@ HEX HERE : BOGUS . ; ' BOGUS - . DECIMAL cr
 \ the text on the first block of a multi-block application.
 
 
-\ 3. How far is PAD from the top of the dictionary in my system?
-\ 128 byges. Pad is actually defined as : PAD HERE 128 + ;
+\ 3. How far is PAD from the top of the dictionary in my
+\ system? 128 bytes. Pad is actually defined as
 \
-\ The above is for pforth. Gforth has these as user variables so
-\ the definitions are different.
+\ : PAD HERE 128 + ;
+\
+\ The above is for pforth. Gforth has these as user variables
+\ so the definitions are different.
 
 
 \ 4. These don't appear applicable beyond noting that BASE does
-\ not seem to be stored in its dictionary entry. I've since seen
-\ that in gforth this is a USER variable.
+\ not seem to be stored in its dictionary entry. I've since
+\ seem that in gforth this is a USER variable.
 
 
 \ 5. An exercise in vectored execution.

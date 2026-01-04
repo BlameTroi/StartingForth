@@ -2,27 +2,28 @@
 
 include TxbWords.fs
 
-\ The various TH words get redefined warnings in gforth, these and
-\ others are safe to ignore.
+\ The various TH words get redefined warnings in gforth, these
+\ and others are safe to ignore.
 \
-\ This really uses the Block word set so this won't work in pforth.
+\ This really uses the Block word set so this won't work in
+\ pforth.
 
 \ When loaded some instream tests fire off.
 
 \ Chapter 10 deals with Forth input/output operations in more
-\ depth, including disk access. Block buffers for disk access in
+\ depth, including disk access. Block buffers for disk access
 \ are not implemented in pforth. They are available in gforth.
 
-\ When I started this chapter I didn't see myself as ever needing
-\ to use the block editor so I dummied up some loads into
-\ temporary blocks.
+\ When I started this chapter I didn't see myself as ever
+\ needing to use the block editor so I dummied up some loads
+\ into temporary blocks.
 
-\ As I look ahead to _Thinking Forth_ I believe I may want to at
-\ least try to use blocks for source to get a better feel of how
-\ and why things were done back in the day.
+\ As I look ahead to _Thinking Forth_ I believe I may want to
+\ at least try to use blocks for source to get a better feel of
+\ how and why things were done back in the day.
 
 
-\ Strings and text and key input are intermixed here with blocks.
+\ Strings, text and key input are intermixed here with blocks.
 \ I've read the chapter through and several of the definitions
 \ don't exist in pforth. Some are in gforth and I worked some
 \ of the problems there.
@@ -89,12 +90,11 @@ update flush
 
 paragraph
 
-
 \ Chapter 10 problems.
 
 \ 1. Enter some text into a block and then define a word CHANGE
-\ that takes two ASCII values and and changes all the occurrences
-\ of the first to the second.
+\ that takes two ASCII values and and changes all the first to
+\ to the second.
 
 \ Copy the buzzword table to another block.
 
@@ -114,34 +114,45 @@ paragraph
 133 list
 
 
-\ 2. Define a word called FORTUNE which will print a preiction at
-\ your terminal. The prediction should be chosen from a block of
-\ 16 lines of 64 characters, remove trailing blanks.
+\ 2. Define a word called FORTUNE which will print a preiction
+\ at your terminal. The prediction should be chosen from a
+\ block of 16 lines of 64 characters, remove trailing blanks.
 
 134 block 1024 blank update flush
 
-s" When everyone in the world sees beauty, then ugly exists." 134 0 >block-line
+s" When everyone in the world sees beauty, then ugly exists."
+   134 0 >block-line
 s" What is and what is not create each other." 134 1 >block-line
 s" High and low rest on each other." 134 2 >block-line
 s" First and last follow each other." 134 3 >block-line
 s" What’s the difference between yes and no?" 134 4 >block-line
-s" What’s the difference between beautiful and ugly?" 134 5 >block-line
+s" What’s the difference between beautiful and ugly?"
+   134 5 >block-line
 s" Heavy is the root of light." 134 6 >block-line
-s" What should be shrunken must first be stretched." 134 7 >block-line
-s" What should be weakened must first be strengthened." 134 8 >block-line
-s" What should be abolished must first be cherished." 134 9 >block-line
-s" What should be deprived must first be enriched." 134 10 >block-line
-s" What has no substance can penetrate what has no opening." 134 11 >block-line
-s" If princes and kings were not exalted they might be overthrown." 134 12 >block-line
-s" Ruling a great country is like cooking a small fish." 134 13 >block-line
-s" In lightness the root is lost. In haste the ruler is lost." 134 14 >block-line
-s" The Way is eternal. Until your last day you are free from peril." 134 15 >block-line
+s" What should be shrunken must first be stretched."
+   134 7 >block-line
+s" What should be weakened must first be strengthened."
+   134 8 >block-line
+s" What should be abolished must first be cherished."
+   134 9 >block-line
+s" What should be deprived must first be enriched."
+   134 10 >block-line
+s" What has no substance can penetrate what has no opening."
+   134 11 >block-line
+s" If princes and kings were not exalted they might be overthrown."
+   134 12 >block-line
+s" Ruling a great country is like cooking a small fish."
+   134 13 >block-line
+s" In lightness the root is lost. In haste the ruler is lost."
+   134 14 >block-line
+s" The Way is eternal. Until your last day you are free from peril."
+   134 15 >block-line
 update flush
 
 \ Select a line from the Taoist sayings block.
 
 : fortune ( -- )
-   16 choose 64 * 134 block + 64 type cr ;
+  16 choose 64 * 134 block + 64 type cr ;
 
 
 \ 3. Buddha brings you the twelve years of animals.
@@ -158,26 +169,26 @@ update flush
 \ separate array.
 
 : .animal ( n -- )
-   abs 12 mod          ( make sure it is in range 0-11 )
-   case
-      0 of ." Rat" endof
-      1 of ." Ox" endof
-      2 of ." Tiger" endof
-      3 of ." Rabbit" endof
-      4 of ." Dragon" endof
-      5 of ." Snake" endof
-      6 of ." Horse" endof
-      7 of ." Ram" endof
-      8 of ." Monkey" endof
-      9 of ." Cock" endof
-      10 of ." Dog" endof
-      11 of ." Boar" endof
-      ." Default is impossible"
-   endcase ;
+  abs 12 mod          ( make sure it is in range 0-11 )
+  case
+     0 of ." Rat" endof
+     1 of ." Ox" endof
+     2 of ." Tiger" endof
+     3 of ." Rabbit" endof
+     4 of ." Dragon" endof
+     5 of ." Snake" endof
+     6 of ." Horse" endof
+     7 of ." Ram" endof
+     8 of ." Monkey" endof
+     9 of ." Cock" endof
+     10 of ." Dog" endof
+     11 of ." Boar" endof
+     ." Default is impossible"
+  endcase ;
 
-\ Define (JUNEESHEE) which takes a year and prints the name of the
-\ animal of the year. 1900 is the year of the Rat, 1901 is the
-\ year of the Ox, and so on.
+\ Define (JUNEESHEE) which takes a year and prints the name of
+\ the animal of the year. 1900 is the year of the Rat, 1901 is
+\ the year of the Ox, and so on.
 
 : (juneeshee) ( n -- , given year >= 1900 print animal )
    1900 - dup
@@ -187,9 +198,9 @@ update flush
       12 mod .animal
    then ;
 
-\ Define JUNEESHEE which prompts the user for their birth year and
-\ prints the name name of the year's animal. Do this so that the
-\ user does not have to press return.
+\ Define JUNEESHEE which prompts the user for their birth year
+\ and prints the name name of the year's animal. Do this so
+\ that the user does not have to press return.
 
 : juneeshee ( -- , accept year >= 1900 and print animal )
    ." Please enter your birth year: "
@@ -204,25 +215,25 @@ update flush
    (juneeshee) cr ;
 
 
-\ 4. Rewrite the definition of LETTER in this chapter so that it
-\ uses names and descriptions that have been entered into a block
-\ instead of character arrays. Define LETTERS so that it prints
-\ one letter for every person in your file.
+\ 4. Rewrite the definition of LETTER in this chapter so that
+\ it uses names and descriptions that have been entered into a
+\ block instead of character arrays. Define LETTERS so that it
+\ prints one letter for every person in your file.
 
 ( As in the text ... rewrite this )
 
 ( FORM LOVE LETTER )
 ( First -- fix the string vriable declarations )
 
-\ Name is defined in gforth but is not in the standard. It's part
-\ of the compiler/interpreter support so this shadowing shouldn't
-\ matter for these eercises. It's actually listed as an alias of
-\ parse-name if I'm reading this right.
+\ NAME is defined in gforth but is not in the standard. It's
+\ part of the compiler/interpreter support so this shadowing
+\ shouldn't matter for these exercises. It's actually listed
+\ as an alias of PARSE-NAME if I'm reading this right.
 
-\ I ended up not finishing this. I think I have the concepts down
-\ and this is basicaly a repeat of earlier problems. Upcoming
-\ problem 5 covers the new areas in this problem and is more
-\ interesting to me.
+\ I ended up not finishing this. I think I have the concepts
+\ down and this is basicaly a repeat of earlier problems.
+\ Upcoming problem 5 covers the new areas in this problem and
+\ is more interesting to me.
 
 create name 14 allot
 create eyes 12 allot
@@ -261,14 +272,14 @@ create me   14 allot
 \ 5. Write a virtual array (disk backed 'virtual' storage
 \ accessed via @ and !).
 \
-\ First select an unused block in your range of assigned blocks.
-\ There can be no text on this block; binary data will be stored
-\ in it. Put this block number in a variable. Then define an
-\ access word which accepts a cell subscript from the stack, then
-\ computes the block number corresponding to this subscript,
-\ calls BLOCK and returns the memory address of the subscripted
-\ cell. This access word should also call UPDATE. Test your work
-\ so far.
+\ First select an unused block in your range of assigned
+\ blocks. There can be no text on this block; binary data will
+\ be stored in it. Put this block number in a variable. Then
+\ define an access word which accepts a cell subscript from
+\ the stack, then computes the block number corresponding to
+\ this subscript, calls BLOCK and returns the memory address
+\ of the subscripted cell. This access word should also call
+\ UPDATE. Test your work so far.
 
 139 constant my-block-no
 variable my-block
@@ -281,21 +292,21 @@ reset-my-block
 
 1024 cell / 1- constant cells-per-block
 
-\ I borrowed the idea of th from _Thinking Forth_ but made it too
-\ specific. After I found out that gforth already has th and
-\ friends I decided to wrap them to limit them to my block.
-\ The built in versions are better but I had already started
-\ down this path. 
+\ I borrowed the idea of th from _Thinking Forth_ but made it
+\ too specific. After I found out that gforth already has th
+\ and friends I decided to wrap them to limit them to my
+\ block. The built in versions are better but I had already
+\ started down this path.
 
 : th ( n -- addr )         \ find cell n in my-block
    my-block @ block        \ block in memory
    swap th                 \ position for "real" th
    update ;                \ might be dirtied
 
-: th@ ( n -- addr )        \ fetch nth item in my-block
+: th@ ( n -- addr ) th @ ; \ fetch nth item in my-block
    th @ ;
 
-: th! ( n1 n2 -- )         \ store n1 into n2th item in my-block
+: th! ( n1 n2 -- ) th ! ;  \ store n1 into n2th item in my-block
    th ! ;
 
 \ Next use the first cell as a count of how many data items are
@@ -323,8 +334,8 @@ reset-my-block
 \ allow for extra spaces. "ENTER 1,2" works, but not "  1,2" or
 \ "1, 2", these three are entered as 1 2 0 2 1 0.
 \
-\ I see solutions for these bugs but they don't add value to the
-\ problem.
+\ I see solutions for these bugs but they don't add value to
+\ the problem.
 
 : enter ( -- , "enter num,num" )
    0 0                     \ double word for >number
@@ -345,6 +356,5 @@ reset-my-block
          i prt space 
       loop 
    then ;
-
 
 \ End of ch10.fs
